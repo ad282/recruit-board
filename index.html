@@ -309,7 +309,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
 (function(){
   "use strict";
   const API_URL="https://script.google.com/macros/s/AKfycbxFms1TAYk5h_hb3O5DTy3hgy-kBexTdlBY4rqWLiATYj-UMtSyP9-p3fQq1dlw4i_P/exec";
-  const BUILD="20261127232324";
+  const BUILD="20261127232657";
   // 新しい版が公開されたら自動で読み込み直す（GitHub Pages は最大10分ほど古い版を返すことがある）
   async function checkVersion(){try{const r=await fetch(location.pathname+"?v="+Date.now(),{cache:"no-store"});const t=await r.text();const m=t.match(/const BUILD="(\d+)"/);if(m&&m[1]!==BUILD&&!document.querySelector(".overlay")&&!document.querySelector("form textarea:focus"))location.replace(location.pathname+"?v="+m[1]);}catch(e){}}
   setTimeout(checkVersion,1500);setInterval(checkVersion,5*60000);
@@ -915,7 +915,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     if(conf.length)box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"送信の確認（"+conf.length+"）"),el("span",{class:"muted"},"最初の数件は内容を確認してから送ります")),list(conf,"",{compact:true})));
     // 3. これからの面談
     const tb=el("table",{class:"stbl2 left"},el("thead",{},el("tr",{},...["日時","名前","職種","面接","形式","面接者","媒体"].map(h=>el("th",{},h)))));const b=el("tbody");
-    fixed.forEach(a=>{const d=-days(a.interviewAt);b.append(el("tr",{},el("td",{class:"num"},when(a.interviewAt),d<=1?el("span",{class:"soon"},d===1?"明日":""):null),el("th",{},el("button",{class:"linkname",onclick:()=>openDetail(a)},a.name)),el("td",{},a.job||""),el("td",{},roundOf(a)),el("td",{},a.interviewMode||"—"),el("td",{},a.interviewer||"—"),el("td",{},a.media||"")));});
+    fixed.forEach(a=>{const d=-days(a.interviewAt);b.append(el("tr",{},el("td",{class:"num"},when(a.interviewAt),String(a.interviewAt).length<=10?el("span",{class:"sub"},"時間未登録（次の自動処理でTimeRex・サイボウズから入ります）"):null,d<=1?el("span",{class:"soon"},d===1?"明日":""):null),el("th",{},el("button",{class:"linkname",onclick:()=>openDetail(a)},a.name)),el("td",{},a.job||""),el("td",{},roundOf(a)),el("td",{},a.interviewMode||"—"),el("td",{},a.interviewer||"—"),el("td",{},a.media||"")));});
     if(!fixed.length)b.append(el("tr",{},el("td",{colspan:"7",class:"muted"},"明日以降の面談はありません")));tb.append(b);
     box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"これからの面談（"+fixed.length+"）")),el("div",{class:"tbl"},tb)));
     // 4. 日程調整中（最終連絡日の古い順）
