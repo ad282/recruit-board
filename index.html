@@ -239,6 +239,9 @@ form.req textarea{min-height:80px;resize:vertical}
 details.card summary{cursor:pointer;list-style:none}
 details.card h3{font-size:13.5px;margin:10px 0 4px}
 @media (max-width:860px){.fn-row{grid-template-columns:80px minmax(0,1fr)}.fn-r{grid-column:2}.rangebar .rg{margin-left:0}}
+.today-card .tc-time{display:flex;flex-direction:column;line-height:1.2}
+.today-card .tc-time.past{color:var(--orange)}
+.today-card .tc-time span{font-size:12px;font-weight:500}
 
 </style>
 </head>
@@ -318,8 +321,15 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     return null;
   }
   const replies=()=>state.apps.filter(a=>a.reply&&!a.reply.handled);
-  const todays=()=>state.apps.filter(a=>a.interviewAt&&String(a.interviewAt).slice(0,10)===today()&&["日程確定","選考中","実施済み","欠席","辞退","日程調整中"].includes(a.status)).sort((x,y)=>String(x.interviewAt).localeCompare(String(y.interviewAt)));
-  const doneToday=a=>["実施済み","欠席","辞退","日程調整中"].includes(a.status)&&a.lastResultDate===today();
+  // 面接記録（所感 or 貼った文字起こし）がその回について入っているか
+  function hasRecord(a){const iv=ivFor(a);if(!iv)return false;const r=roundOf(a);return (iv.rounds||[]).some(x=>x.round===r&&x.comment&&String(x.comment).trim())||(iv.pending||[]).some(p=>p.round===r);}
+  const ivDate=a=>String(a.interviewAt||"").slice(0,10);
+  // 今日の面接＋過去の面接で記録がまだの人（記録が入るまでずっと残す）
+  const todays=()=>state.apps.filter(a=>{if(!a.interviewAt||ivDate(a)>today())return false;
+    if(ivDate(a)===today()&&a.lastResultDate===today()&&["欠席","辞退","日程調整中"].includes(a.status))return true;
+    return ["日程確定","選考中","実施済み"].includes(a.status)&&!hasRecord(a);}).sort((x,y)=>String(x.interviewAt).localeCompare(String(y.interviewAt)));
+  const todayOnly=()=>state.apps.filter(a=>a.interviewAt&&ivDate(a)===today()&&!["見送り","内定"].includes(a.status));
+  const doneToday=a=>["欠席","辞退","日程調整中"].includes(a.status)&&a.lastResultDate===today();
   const STATUS_COLOR={"未選考":"orange","通過":"blue","日程調整中":"blue","選考中":"blue","送信確認待ち":"red","要確認":"red","日程確定":"green","実施済み":"blue","内定":"green","見送り":"grey","辞退":"grey","欠席":"grey"};
   function matchQ(a){const q=state.q.trim().toLowerCase();return !q||[a.name,a.company,a.school,a.summary,a.media,a.job].join(" ").toLowerCase().includes(q);}
   const roundOf=a=>a.currentRound||"1次";
@@ -428,12 +438,13 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
   function todayCard(a){
     const c=el("article",{class:"today-card"});const iv=ivFor(a);const r=roundOf(a);const td=today();
     const pend=iv?(iv.pending||[]).filter(p=>p.round===r):[];
-    c.append(el("div",{class:"tc-time"},hm(a.interviewAt)||"--:--"),
+    const past=ivDate(a)<td;
+    c.append(el("div",{class:"tc-time"+(past?" past":"")},past?el("span",{},md(a.interviewAt)):null,hm(a.interviewAt)||(past?"":"--:--")),
       el("div",{class:"tc-main"},
         el("div",{style:"display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline"},el("button",{class:"linkname nm",onclick:()=>openDetail(a)},a.name),el("span",{class:"mt"},[a.age,a.company].filter(Boolean).join(" ／ "))),
         el("div",{class:"tags",style:"margin-top:4px"},el("span",{class:"tag job"},a.job||""),el("span",{class:"tag"},r+"面接"),a.interviewMode?el("span",{class:"tag"},a.interviewMode):null,a.interviewer?el("span",{class:"tag"},"面接者 "+a.interviewer):null,el("span",{class:"tag"},a.media||""))));
     const acts=el("div",{class:"acts"});const now=new Date().toISOString();const dis=!!state.busy[a.id];
-    const result=a.lastResultDate===td?a.lastResult:null;
+    const result=a.status==="実施済み"?"実施":(a.lastResultDate===td?a.lastResult:null);
     if(result){
       acts.append(el("span",{class:"pill p-"+(result==="実施"?"日程確定":"見送り")},result==="実施"?"実施済み":result));
       if(result==="実施"){
@@ -451,9 +462,9 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     c.append(acts);return c;
   }
   function todaySection(){
-    const rows=todays().filter(matchQ);
-    return el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"今日の面接（"+md(today())+"）"),el("span",{class:"muted"},"終わったら「実施した」を押して文字起こしを貼ってください")),
-      rows.length?el("div",{class:"list"},...rows.map(todayCard)):el("div",{class:"muted"},"今日の面接はありません"));
+    const rows=todays().filter(matchQ);const past=rows.filter(a=>ivDate(a)<today()).length;
+    return el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"今日の面接・面接記録待ち（"+rows.length+"）"),el("span",{class:"muted"},"面接が終わったら「実施した」を押して文字起こしを貼ってください。記録が入るまでここに残ります"+(past?"（前日以前の記録待ち "+past+"人）":""))),
+      rows.length?el("div",{class:"list"},...rows.map(todayCard)):el("div",{class:"muted"},"今日の面接・記録待ちの人はいません"));
   }
 
   // ---------------------------------------------------------------- 文字起こしの貼り付け
@@ -648,7 +659,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     const td=today();const in7=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
     const upcoming=state.apps.filter(a=>a.status==="日程確定"&&a.interviewAt&&String(a.interviewAt).slice(0,10)>=td).sort(asc("interviewAt"));
     const k=[
-      {n:todays().length,l:"今日の面接",c:"green",i:"mic",go:"sched"},
+      {n:todayOnly().length,l:"今日の面接",c:"green",i:"mic",go:"sched"},
       {n:tasks().length,l:"残りタスク",c:"orange",i:"task",go:"tasks"},
       {n:replies().length,l:"返信待ち",c:"red",i:"reply",go:"replies"},
       {n:upcoming.filter(a=>String(a.interviewAt).slice(0,10)<=in7).length,l:"7日以内の面談",c:"blue",i:"cal",go:"sched"}];
