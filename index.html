@@ -286,7 +286,9 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
   const svg=k=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+ICON[k]+'</svg>';
   const VIEWS=[
     {id:"home",label:"ホーム",icon:"home"},
-    {id:"tasks",label:"残りタスク",icon:"task",badge:()=>tasks().length},
+    {id:"docs",label:"書類選考",icon:"task",badge:()=>kindRows("doc").length},
+    {id:"after",label:"面接後の判断",icon:"check",badge:()=>kindRows("after").length},
+    {id:"tasks",label:"確認・要対応",icon:"reply",badge:()=>kindRows("send").length+kindRows("check").length},
     {id:"replies",label:"返信待ち",icon:"reply",badge:()=>replies().length},
     {id:"sched",label:"日程・面談",icon:"cal",badge:()=>state.apps.filter(a=>a.status==="送信確認待ち").length+todays().filter(a=>!doneToday(a)).length},
     {id:"interviews",label:"面接記録",icon:"mic",badge:()=>state.ivs.filter(v=>byJobIv(v)&&(v.pending||[]).some(p=>p.status==="整形待ち")).length},
@@ -364,7 +366,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     catch(e){if(token)banner("読み込みに失敗しました："+e.message,true);}
   }
   async function upd(path,patch){
-    try{const data=await api("update",path,patch);const [coll,id]=path.split("/");const arr=coll==="applicants"?state.all:coll==="requests"?state.reqs:coll==="interviews"?state.ivs:null;
+    try{const data=await api("update",path,patch);if(data&&data._sheetWarn)banner(data._sheetWarn,true);const [coll,id]=path.split("/");const arr=coll==="applicants"?state.all:coll==="requests"?state.reqs:coll==="interviews"?state.ivs:null;
       if(arr){const i=arr.findIndex(x=>x.id===id);const o=Object.assign({id,_path:path},data);if(i>=0)arr[i]=o;else arr.push(o);}else if(path==="meta/settings")state.settings=data;
       applyJob();return true;}
     catch(e){banner("保存できませんでした："+e.message,true);return false;}
@@ -570,7 +572,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
       g.append(el("button",{class:"jobcard",onclick:()=>pickJob(j)},
         el("span",{class:"jn"},j),
         el("span",{class:"muted"},j==="すべての職種"?"募集中の職種をまとめて見る":"募集中"),
-        el("div",{class:"js"},el("div",{},el("b",{},n(a=>["未選考","送信確認待ち","要確認"].includes(a.status))),"残りタスク"),el("div",{},el("b",{},n(a=>a.status==="日程確定")),"面談予定"),el("div",{},el("b",{},n(a=>String(a.appliedAt||"").startsWith(mo))),"今月の応募"))));});
+        el("div",{class:"js"},el("div",{},el("b",{},n(a=>a.status==="未選考")),"書類選考待ち"),el("div",{},el("b",{},n(a=>a.status==="日程確定")),"面談予定"),el("div",{},el("b",{},n(a=>String(a.appliedAt||"").startsWith(mo))),"今月の応募"))));});
     return el("div",{class:"col"},title("どの採用職種を見ますか？","選んだ職種の応募者・面談・集計だけを表示します。あとから左のメニューで切り替えられます。"),g);
   }
   // ---------------------------------------------------------------- 集計（期間を選んで分析）
@@ -660,14 +662,14 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     const upcoming=state.apps.filter(a=>a.status==="日程確定"&&a.interviewAt&&String(a.interviewAt).slice(0,10)>=td).sort(asc("interviewAt"));
     const k=[
       {n:todayOnly().length,l:"今日の面接",c:"green",i:"mic",go:"sched"},
-      {n:tasks().length,l:"残りタスク",c:"orange",i:"task",go:"tasks"},
+      {n:kindRows("doc").length,l:"書類選考待ち",c:"orange",i:"task",go:"docs"},
       {n:replies().length,l:"返信待ち",c:"red",i:"reply",go:"replies"},
       {n:upcoming.filter(a=>String(a.interviewAt).slice(0,10)<=in7).length,l:"7日以内の面談",c:"blue",i:"cal",go:"sched"}];
     const kp=el("div",{class:"kpis"});k.forEach(x=>kp.append(el("button",{class:"kpi",onclick:()=>go(x.go)},el("div",{class:"ic "+x.c,html:svg(x.i)}),el("div",{},el("div",{class:"n"},x.n),el("div",{class:"l"},x.l)))));
     left.append(kp);
     if(todays().length)left.append(todaySection());
     const todo=el("div",{class:"todo"});
-    [["書類選考待ち",state.apps.filter(a=>a.status==="未選考").length,"tasks"],["面接後の判断",state.apps.filter(isAfter).length,"tasks"],["送信の確認",state.apps.filter(a=>a.status==="送信確認待ち").length,"sched"],["返信待ち",replies().length,"replies"],["依頼の要確認",state.reqs.filter(r=>r.status==="要確認").length,"requests"]]
+    [["書類選考待ち",kindRows("doc").length,"docs"],["面接後の判断",kindRows("after").length,"after"],["送信の確認",state.apps.filter(a=>a.status==="送信確認待ち").length,"sched"],["返信待ち",replies().length,"replies"],["依頼の要確認",state.reqs.filter(r=>r.status==="要確認").length,"requests"]]
       .forEach(([l,n,g])=>todo.append(el("button",{onclick:()=>go(g)},n?el("span",{class:"dot"}):null,el("span",{class:"tn"},n),l)));
     left.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"やること")),todo));
     const two=el("div",{class:"two"});
@@ -683,7 +685,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     two.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"今月の媒体別応募"),el("span",{class:"muted"},"ボードに入っている人")),bars));
     left.append(two);
     const t2=tasks().filter(matchQ).sort(asc("appliedAt")).slice(0,4);
-    left.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"書類選考待ち（古い順）"),el("button",{class:"more",onclick:()=>go("tasks")},"すべて見る")),list(t2,"書類選考待ちの人はいません")));
+    left.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"書類選考待ち（古い順）"),el("button",{class:"more",onclick:()=>go("docs")},"すべて見る")),list(t2,"書類選考待ちの人はいません")));
     w.append(left);
     const ev=[];
     state.apps.forEach(a=>{if(a.createdAt&&a.source!=="初回取り込み")ev.push({t:a.createdAt,c:"",x:a.name+" さんが応募（"+a.media+"）"});
@@ -697,12 +699,17 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     w.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"最近の動き")),tl));
     return w;
   }
+  const kindRows=k=>state.apps.filter(a=>(taskKind(a)||{}).k===k);
+  function taskView(k,h,sub,compact){
+    const rows=kindRows(k).filter(byJob).filter(matchQ).sort(asc(k==="after"?"interviewAt":"appliedAt"));
+    return el("div",{class:"col"},title(h+"（"+rows.length+"）",sub),jobChips(kindRows(k)),list(rows,"ありません",{compact}));
+  }
+  const vDocs=()=>taskView("doc","書類選考","1次面接（カジュアル面談）に進めるか、見送りかを決めてください。決めるまでここに残ります。",false);
+  const vAfter=()=>taskView("after","面接後の判断","面接が終わった人です。次の面接（2次・3次…）に進めるか、内定か、見送りかを決めてください。",true);
   function vTasks(){
-    const rows=tasks().filter(byJob).filter(matchQ);
-    const box=el("div",{class:"col"},title("残りタスク","人の判断が必要なものだけ。判断するまでここに残ります。"),jobChips(tasks()));
-    const G=[["send","送信の確認","入力済みのメッセージを確認して送信してください"],["doc","書類選考","1次面接（カジュアル面談）に進めるか、見送りか"],["after","面接後の判断","次の面接（2次・3次…）に進めるか、内定か、見送りか"],["check","要確認","自動処理で止まったもの"]];
-    G.forEach(([k,h,sub])=>{const rs=rows.filter(a=>(taskKind(a)||{}).k===k).sort(asc(k==="after"?"interviewAt":"appliedAt"));if(!rs.length&&k!=="doc"&&k!=="after")return;
-      box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},h+"（"+rs.length+"）"),el("span",{class:"muted"},sub)),list(rs,"ありません",{compact:k!=="doc"})));});
+    const box=el("div",{class:"col"},title("確認・要対応","送信前の確認と、自動処理で止まったもの。"));
+    [["send","送信の確認","入力済みのメッセージを確認して送信してください"],["check","要確認","自動処理で止まったもの"]].forEach(([k,h,sub])=>{const rs=kindRows(k).filter(byJob).filter(matchQ).sort(asc("appliedAt"));
+      box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},h+"（"+rs.length+"）"),el("span",{class:"muted"},sub)),list(rs,"ありません",{compact:true})));});
     return box;}
   function vReplies(){const rows=replies().filter(matchQ).sort((a,b)=>String(a.reply.at).localeCompare(String(b.reply.at)));return el("div",{class:"col"},title("返信待ち","媒体で相手から連絡が来ていて、こちらがまだ返していない人。"),list(rows,"返信待ちの人はいません"));}
   function vSched(){
@@ -779,6 +786,12 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
       el("label",{},"日程調整の送信",el("select",{name:"auto"},el("option",{value:"0",selected:s.autoSend?null:true},"最初の"+(s.confirmQuota||3)+"件は確認"),el("option",{value:"1",selected:s.autoSend?true:null},"自動で送る"))),
       el("div",{style:"display:flex;align-items:flex-end"},el("button",{class:"btn pri",type:"submit"},"保存")));
     box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"日程調整")),sf));
+    const sb=el("button",{class:"btn",onclick:async()=>{if(!confirm("応募者管理シートの内容で、ボードの進捗を合わせ直します。ふだんはボードからシートへ書き込む一方向なので、シートを手で直したときだけ使ってください。実行しますか？"))return;sb.disabled=true;sm.textContent="取り込んでいます…（30秒ほど）";
+      try{const r=await api("syncSheet");sm.textContent="完了：更新 "+r.changed+"人・追加 "+r.added+"人";await load(true);}catch(e){sm.textContent="失敗："+e.message;}sb.disabled=false;}},"シートから取り込み直す");
+    const sm=el("span",{class:"muted"},"");
+    box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"応募者管理シートとの関係")),
+      el("div",{class:"muted"},"正本はこのボードです。ボードで選考の状態を変えると、応募者管理シートのD列「進捗」に自動で書き込みます。新しい応募者は自動処理がボードとシートの両方に追加します。"),
+      el("div",{style:"display:flex;gap:10px;align-items:center;flex-wrap:wrap"},sb,sm)));
     return box;
   }
   function go(v){if(!state.selJob&&v!=="settings"){render();return;}state.view=v;state.job="すべて";state.nexting=null;state.confirming=null;try{localStorage.setItem(NS+"view",v)}catch(e){}render();window.scrollTo(0,0);}
@@ -792,7 +805,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     const d=new Date();$("#date").textContent=d.getFullYear()+"/"+z(d.getMonth()+1)+"/"+z(d.getDate())+" "+"日月火水木金土"[d.getDay()]+"曜日";
     const cj=$("#curjob");cj.textContent="";cj.hidden=!state.selJob;
     if(state.selJob)cj.append(el("span",{class:"muted"},"表示中の職種"),el("span",{class:"cj"},state.selJob),el("button",{onclick:()=>pickJob(null)},"職種を切り替える"));
-    const map={home:vHome,tasks:vTasks,replies:vReplies,sched:vSched,interviews:vInterviews,requests:vRequests,scout:vScout,stats:vStats,all:vAll,settings:vSettings};
+    const map={home:vHome,docs:vDocs,after:vAfter,tasks:vTasks,replies:vReplies,sched:vSched,interviews:vInterviews,requests:vRequests,scout:vScout,stats:vStats,all:vAll,settings:vSettings};
     const v=$("#view");v.textContent="";v.append(state.view==="settings"?vSettings():state.selJob?(map[state.view]||vHome)():vPicker());
     if(state.detail)renderDetail();else if(state.ivOpen)renderIv();
   }
