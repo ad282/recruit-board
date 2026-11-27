@@ -263,6 +263,12 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
 .stbl2 tr.tot th,.stbl2 tr.tot td{font-weight:700;background:var(--accent-soft)}
 .stbl2 tbody tr:hover td,.stbl2 tbody tr:hover th{background:var(--card-2)}
 .st-block details summary{cursor:pointer;color:var(--accent);font-size:12.5px}
+.stbl2 td .sub{display:block;font-family:var(--f-body);font-size:11px;color:var(--ink-3)}
+.stbl2 td{vertical-align:top}
+.stbl2 tr.late td,.stbl2 tr.late th{background:var(--orange-soft)}
+.stbl2 td.warn{color:var(--red);font-weight:700}
+.stbl2 .soon{margin-left:6px;font-size:11px;color:var(--green);font-family:var(--f-body)}
+.stbl2.left td{text-align:left;font-family:var(--f-body)}.stbl2.left td.num{font-family:var(--f-num)}.stbl2.left thead th{text-align:left}
 
 </style>
 </head>
@@ -290,7 +296,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
 (function(){
   "use strict";
   const API_URL="https://script.google.com/macros/s/AKfycbxFms1TAYk5h_hb3O5DTy3hgy-kBexTdlBY4rqWLiATYj-UMtSyP9-p3fQq1dlw4i_P/exec";
-  const BUILD="20261127231057";
+  const BUILD="20261127231336";
   // 新しい版が公開されたら自動で読み込み直す（GitHub Pages は最大10分ほど古い版を返すことがある）
   async function checkVersion(){try{const r=await fetch(location.pathname+"?v="+Date.now(),{cache:"no-store"});const t=await r.text();const m=t.match(/const BUILD="(\d+)"/);if(m&&m[1]!==BUILD&&!document.querySelector(".overlay")&&!document.querySelector("form textarea:focus"))location.replace(location.pathname+"?v="+m[1]);}catch(e){}}
   setTimeout(checkVersion,1500);setInterval(checkVersion,5*60000);
@@ -791,20 +797,45 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
       box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},h+"（"+rs.length+"）"),el("span",{class:"muted"},sub)),list(rs,"ありません",{compact:true})));});
     return box;}
   function vReplies(){const rows=replies().filter(matchQ).sort((a,b)=>String(a.reply.at).localeCompare(String(b.reply.at)));return el("div",{class:"col"},title("返信待ち","媒体で相手から連絡が来ていて、こちらがまだ返していない人。"),list(rows,"返信待ちの人はいません"));}
+  // 最終連絡日：自動処理が記録した lastContactAt を優先。なければ送信日・リマインド日・返信日のうち新しいもの
+  function lastContact(a){
+    const c=[[a.lastContactAt,a.lastContactBy||"連絡"],[a.sentAt,"日程調整を送信"],[a.remindedAt,"リマインド送信"],[a.reply&&a.reply.at,"相手から返信"]].filter(x=>x[0]).sort((x,y)=>String(y[0]).localeCompare(String(x[0])));
+    return c.length?{at:c[0][0],what:c[0][1]}:null;
+  }
   function vSched(){
-    const conf=state.apps.filter(a=>a.status==="送信確認待ち").filter(matchQ);
-    const adj=state.apps.filter(a=>["通過","日程調整中"].includes(a.status)).filter(byJob).filter(matchQ).sort(asc("decidedAt"));
-    const fixed=state.apps.filter(a=>a.status==="日程確定"&&String(a.interviewAt||"").slice(0,10)>today()).filter(byJob).filter(matchQ).sort(asc("interviewAt"));
-    const after=state.apps.filter(isAfter).filter(byJob).filter(matchQ).sort(asc("interviewAt"));
-    const tb=el("table",{},el("thead",{},el("tr",{},el("th",{},"面談日時"),el("th",{},"名前"),el("th",{},"面接"),el("th",{},"面接者"),el("th",{},"媒体"))));const b=el("tbody");
-    fixed.forEach(a=>b.append(el("tr",{},el("td",{class:"num"},when(a.interviewAt)),el("td",{},el("button",{class:"linkname",onclick:()=>openDetail(a)},a.name)),el("td",{},roundOf(a)+(a.interviewMode?"・"+a.interviewMode:"")),el("td",{},a.interviewer||""),el("td",{},(a.media||"")+(a.route?"・"+a.route:"")))));
-    if(!fixed.length)b.append(el("tr",{},el("td",{colspan:"5",class:"muted"},"明日以降の面談はありません")));tb.append(b);
-    return el("div",{class:"col"},title("日程・面談","1次はTimeRex、2次以降の対面は面接者のサイボウズの空きで調整します。"),jobChips(state.apps),
-      todaySection(),
-      conf.length?el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"送信の確認（最初の数件）")),list(conf,"")):null,
-      el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"これからの面談")),el("div",{class:"tbl"},tb)),
-      el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"日程調整中")),list(adj,"日程調整中の人はいません",{compact:true})),
-      el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"面接後の判断待ち"),el("span",{class:"muted"},"次の面接・内定・見送りを選んでください")),list(after,"判断待ちの人はいません",{compact:true})));
+    const td=today();const RD=(state.settings&&state.settings.remindDays)||7;
+    const conf=state.apps.filter(a=>a.status==="送信確認待ち").filter(byJob).filter(matchQ);
+    const adj=state.apps.filter(a=>["通過","日程調整中"].includes(a.status)).filter(byJob).filter(matchQ);
+    const fixed=state.apps.filter(a=>a.status==="日程確定"&&ivDate(a)>td).filter(byJob).filter(matchQ).sort(asc("interviewAt"));
+    const box=el("div",{class:"col"},title("日程・面談","上から「今日」「これから」「日程調整中」の順。1次はTimeRex、2次以降の対面は面接者のサイボウズの空きで調整します。"),jobChips(state.apps));
+    // 1. 今日・記録待ち
+    box.append(todaySection());
+    // 2. 送信の確認
+    if(conf.length)box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"送信の確認（"+conf.length+"）"),el("span",{class:"muted"},"最初の数件は内容を確認してから送ります")),list(conf,"",{compact:true})));
+    // 3. これからの面談
+    const tb=el("table",{class:"stbl2 left"},el("thead",{},el("tr",{},...["日時","名前","職種","面接","形式","面接者","媒体"].map(h=>el("th",{},h)))));const b=el("tbody");
+    fixed.forEach(a=>{const d=-days(a.interviewAt);b.append(el("tr",{},el("td",{class:"num"},when(a.interviewAt),d<=1?el("span",{class:"soon"},d===1?"明日":""):null),el("th",{},el("button",{class:"linkname",onclick:()=>openDetail(a)},a.name)),el("td",{},a.job||""),el("td",{},roundOf(a)),el("td",{},a.interviewMode||"—"),el("td",{},a.interviewer||"—"),el("td",{},a.media||"")));});
+    if(!fixed.length)b.append(el("tr",{},el("td",{colspan:"7",class:"muted"},"明日以降の面談はありません")));tb.append(b);
+    box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"これからの面談（"+fixed.length+"）")),el("div",{class:"tbl"},tb)));
+    // 4. 日程調整中（最終連絡日の古い順）
+    const rows=adj.map(a=>{const lc=lastContact(a);const ago=lc?days(lc.at):null;return {a,lc,ago};}).sort((x,y)=>(y.ago==null?999:y.ago)-(x.ago==null?999:x.ago));
+    const over=rows.filter(r=>r.ago!=null&&r.ago>=RD).length;
+    const t2=el("table",{class:"stbl2 left"},el("thead",{},el("tr",{},...["名前","職種","媒体","面接","最終連絡日","経過","リマインド"].map(h=>el("th",{},h)))));const b2=el("tbody");
+    rows.forEach(({a,lc,ago})=>{
+      let rm;if(a.status==="通過")rm=el("span",{class:"st blue"},"次の自動処理で日程調整を送信");
+      else if(a.remindedAt)rm=el("span",{class:"st grey"},md(a.remindedAt)+" 送信済み");
+      else if(a.reply&&!a.reply.handled)rm=el("span",{class:"st orange"},"相手から返信あり（返信待ちへ）");
+      else if(ago!=null&&ago>=RD)rm=el("span",{class:"st red"},"次の自動処理で送信");
+      else if(lc)rm=el("span",{class:"st grey"},md(ymd(new Date(new Date(String(lc.at).slice(0,10)+"T00:00:00").getTime()+RD*864e5)))+" に自動送信予定");
+      else rm=el("span",{class:"st grey"},"最終連絡日を確認中");
+      b2.append(el("tr",{class:ago!=null&&ago>=RD?"late":null},
+        el("th",{},el("button",{class:"linkname",onclick:()=>openDetail(a)},a.name)),el("td",{},a.job||""),el("td",{},(a.media||"")+(a.route&&a.media==="人材紹介"?"・"+a.route:"")),
+        el("td",{},((a.nextRound&&a.nextRound.round)||roundOf(a))+(a.nextRound&&a.nextRound.mode?"・"+String(a.nextRound.mode).replace("（TimeRex）",""):"")),
+        el("td",{class:"num"},lc?when(String(lc.at).slice(0,10)):"—",lc?el("span",{class:"sub"},lc.what):null),
+        el("td",{class:"num"+(ago!=null&&ago>=RD?" warn":"")},ago==null?"—":ago===0?"今日":ago+"日"),el("td",{},rm)));});
+    if(!rows.length)b2.append(el("tr",{},el("td",{colspan:"7",class:"muted"},"日程調整中の人はいません")));t2.append(b2);
+    box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"日程調整中（"+rows.length+"）"),el("span",{class:"muted"},"最終連絡日の古い順。"+RD+"日以上連絡がない人には自動でリマインドを1回送ります"+(over?"（今 "+over+"人）":""))),el("div",{class:"tbl"},t2)));
+    return box;
   }
   function vRequests(){
     const f=el("form",{class:"req",onsubmit:async e=>{e.preventDefault();const fd=new FormData(f);const r={type:fd.get("type"),media:fd.get("media"),job:fd.get("job"),count:fd.get("count")?Number(fd.get("count")):null,detail:fd.get("detail")||""};if(!r.detail&&r.type==="その他"){banner("内容を書いてください。",true);return;}await newRequest(r);f.reset();}},
