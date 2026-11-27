@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>ExKey 採用ボード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Roboto+Mono:wght@500;700&display=swap">
+<style>
+*{box-sizing:border-box}body{margin:0}
+
+/* Layout: 左に濃紺のサイドメニュー（件数バッジ）、右に上部バーと白カードの作業エリア。ホームは数値カード→やること→面談予定・媒体別グラフ＋右に最近の動き */
+:root{
+  --bg:#eef1f7; --card:#ffffff; --card-2:#f5f7fb; --line:#e3e7ef;
+  --ink:#1e2433; --ink-2:#5b6478; --ink-3:#98a0b3;
+  --side:#1b1f33; --side-ink:#c9cfe0; --side-active:#262b45;
+  --accent:#2f5be7; --accent-ink:#ffffff; --accent-soft:#e6ecfd;
+  --green:#22a876; --green-soft:#e1f5ed; --orange:#e08a12; --orange-soft:#fdf1df;
+  --red:#e0474c; --red-soft:#fde6e7; --grey-soft:#eef0f4;
+  --shadow:0 1px 3px rgba(30,36,51,.06),0 4px 14px rgba(30,36,51,.04);
+  --f-body:"Noto Sans JP","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+  --f-num:"Roboto Mono",ui-monospace,Menlo,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12151f; --card:#1b2030; --card-2:#222838; --line:#2c3347;
+  --ink:#e7eaf2; --ink-2:#a6adbf; --ink-3:#6f778b;
+  --side:#0c0e17; --side-ink:#a9b0c4; --side-active:#1b2030;
+  --accent:#6b8cff; --accent-ink:#0c0e17; --accent-soft:#232d4f;
+  --green:#4fd19f; --green-soft:#17352b; --orange:#f2b158; --orange-soft:#3a2c16;
+  --red:#ff7d81; --red-soft:#3d2023; --grey-soft:#262c3c;
+  --shadow:0 1px 3px rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151f; --card:#1b2030; --card-2:#222838; --line:#2c3347;
+  --ink:#e7eaf2; --ink-2:#a6adbf; --ink-3:#6f778b;
+  --side:#0c0e17; --side-ink:#a9b0c4; --side-active:#1b2030;
+  --accent:#6b8cff; --accent-ink:#0c0e17; --accent-soft:#232d4f;
+  --green:#4fd19f; --green-soft:#17352b; --orange:#f2b158; --orange-soft:#3a2c16;
+  --red:#ff7d81; --red-soft:#3d2023; --grey-soft:#262c3c;
+  --shadow:0 1px 3px rgba(0,0,0,.3); color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.55}
+.app{display:grid;grid-template-columns:210px minmax(0,1fr);min-height:100%}
+aside.side{background:var(--side);color:var(--side-ink);display:flex;flex-direction:column;gap:4px;padding-block:20px;position:sticky;top:0;height:100vh;padding-left:max(0px,env(safe-area-inset-left,0px))}
+.brand{display:flex;align-items:center;gap:10px;padding:0 20px 18px;color:#fff;font-weight:700;font-size:15px;letter-spacing:.02em}
+.brand .mark{width:28px;height:28px;border-radius:7px;background:var(--accent);display:grid;place-items:center;color:#fff;font-size:13px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{all:unset;cursor:pointer;display:flex;align-items:center;gap:12px;padding:11px 20px;font-size:14px;border-left:3px solid transparent;color:var(--side-ink)}
+.nav button:hover{background:var(--side-active)}
+.nav button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.nav button[aria-current="page"]{background:var(--side-active);border-left-color:var(--accent);color:#fff}
+.nav svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7}
+.nav .badge{margin-left:auto;background:var(--red);color:#fff;font-family:var(--f-num);font-size:11px;padding:0 7px;border-radius:999px;min-width:20px;text-align:center}
+.side .foot{margin-top:auto;padding:0 20px;font-size:11.5px;color:var(--ink-3);line-height:1.6}
+main{display:flex;flex-direction:column;gap:16px;padding-block:16px 40px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));min-width:0}
+.topbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:10px 16px}
+.topbar input{font:inherit;flex:1 1 220px;max-width:360px;min-width:0;border:1px solid var(--line);background:var(--card-2);color:var(--ink);border-radius:999px;padding:6px 14px}
+.topbar .date{margin-left:auto;font-family:var(--f-num);color:var(--ink-2);font-size:13px}
+.topbar .mode{font-size:12px;color:var(--ink-2);background:var(--card-2);border-radius:999px;padding:3px 10px}
+h2{font-size:15px;margin:0;font-weight:700}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card .hd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card .hd .more{all:unset;cursor:pointer;color:var(--accent);font-size:12.5px}
+.grid-home{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{all:unset;cursor:pointer;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px;display:flex;align-items:center;gap:14px}
+.kpi:focus-visible{outline:2px solid var(--accent)}
+.kpi .ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex:none}
+.kpi .ic svg{width:20px;height:20px;fill:none;stroke-width:1.8}
+.kpi .n{font-family:var(--f-num);font-size:24px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12px;color:var(--ink-2)}
+.ic.blue{background:var(--accent-soft)} .ic.blue svg{stroke:var(--accent)}
+.ic.green{background:var(--green-soft)} .ic.green svg{stroke:var(--green)}
+.ic.orange{background:var(--orange-soft)} .ic.orange svg{stroke:var(--orange)}
+.ic.red{background:var(--red-soft)} .ic.red svg{stroke:var(--red)}
+.todo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.todo button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:8px;position:relative;text-align:center;font-size:12.5px;color:var(--ink-2)}
+.todo button:hover{background:var(--card-2)}
+.todo button:focus-visible{outline:2px solid var(--accent)}
+.todo .tn{font-family:var(--f-num);font-size:20px;font-weight:700;color:var(--ink)}
+.todo .dot{position:absolute;top:8px;right:calc(50% - 22px);width:8px;height:8px;border-radius:50%;background:var(--red)}
+.two{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-weight:500;color:var(--ink-2);text-align:left;background:var(--card-2);padding:8px 10px;white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num{font-family:var(--f-num);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tbl{overflow-x:auto}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap}
+.st::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.st.blue{color:var(--accent)} .st.green{color:var(--green)} .st.orange{color:var(--orange)} .st.red{color:var(--red)} .st.grey{color:var(--ink-3)}
+.bars{display:flex;align-items:flex-end;gap:14px;height:150px;padding-top:18px}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;min-width:0}
+.bar .v{font-family:var(--f-num);font-size:11.5px;color:var(--ink-2)}
+.bar .b{width:14px;border-radius:7px 7px 2px 2px;background:var(--accent);min-height:2px}
+.bar .k{font-size:11px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tl{display:flex;flex-direction:column;gap:2px;max-height:620px;overflow:auto}
+.tl .day{align-self:flex-start;font-family:var(--f-num);font-size:11.5px;color:var(--red);border:1px solid var(--red);border-radius:999px;padding:0 8px;margin:8px 0 4px}
+.tl .it{display:grid;grid-template-columns:12px minmax(0,1fr);gap:8px;padding:6px 0}
+.tl .it::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);margin-top:7px}
+.tl .it.g::before{background:var(--green)} .tl .it.o::before{background:var(--orange)} .tl .it.r::before{background:var(--red)}
+.tl .t{font-family:var(--f-num);font-size:11.5px;color:var(--ink-3)}
+.tl .x{font-size:13px}
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.chip{all:unset;cursor:pointer;font-size:12.5px;border:1px solid var(--line);background:var(--card);color:var(--ink-2);padding:3px 12px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip:focus-visible{outline:2px solid var(--accent)}
+.list{display:flex;flex-direction:column;gap:10px}
+.app-card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 14px;border-left:3px solid transparent}
+.app-card.late{border-left-color:var(--orange)}
+.app-card .nm{font-weight:700;font-size:15.5px}
+.app-card .mt{color:var(--ink-2);font-size:12.5px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:11.5px;padding:1px 8px;border-radius:4px;background:var(--grey-soft);color:var(--ink-2)}
+.tag.job{background:var(--accent-soft);color:var(--accent)}
+.tag.late{background:var(--orange-soft);color:var(--orange)}
+.sum{grid-column:1/-1;white-space:pre-wrap;font-size:13px;background:var(--card-2);border-radius:6px;padding:8px 12px;min-width:0}
+.sum.empty{color:var(--ink-3)}
+.note{grid-column:1/-1;font-size:12.5px;border-radius:6px;padding:6px 10px;background:var(--accent-soft);color:var(--accent)}
+.note.warn{background:var(--red-soft);color:var(--red)}
+.note.reply{background:var(--orange-soft);color:var(--ink)}
+.acts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:6px 14px;border-radius:6px;cursor:pointer}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.dng{color:var(--red);border-color:var(--red)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.pill{justify-self:end;align-self:start;font-size:12px;padding:2px 10px;border-radius:999px;white-space:nowrap}
+.p-未選考{background:var(--orange-soft);color:var(--orange)}
+.p-通過,.p-日程調整中,.p-選考中{background:var(--accent-soft);color:var(--accent)}
+.p-送信確認待ち,.p-要確認{background:var(--red-soft);color:var(--red)}
+.p-日程確定{background:var(--green-soft);color:var(--green)}
+.p-見送り{background:var(--grey-soft);color:var(--ink-3)}
+.empty{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:28px;text-align:center;color:var(--ink-2)}
+form.req{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+form.req label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--ink-2)}
+form.req .wide{grid-column:1/-1}
+form.req select,form.req input,form.req textarea{font:inherit;color:var(--ink);background:var(--card-2);border:1px solid var(--line);border-radius:6px;padding:7px 10px;min-width:0}
+form.req textarea{min-height:80px;resize:vertical}
+.banner{font-size:13px;padding:8px 12px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.banner.err{background:var(--red-soft);color:var(--red)}
+.muted{color:var(--ink-3);font-size:12.5px}
+.sec-title{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.sec-title h1{font-size:19px;margin:0}
+.picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.jobcard{all:unset;cursor:pointer;background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;display:flex;flex-direction:column;gap:10px;border-top:3px solid var(--accent)}
+.jobcard.idle{border-top-color:var(--line)}
+.jobcard:hover{box-shadow:0 4px 18px rgba(47,91,231,.15)}
+.jobcard:focus-visible{outline:2px solid var(--accent)}
+.jobcard .jn{font-size:17px;font-weight:700}
+.jobcard .js{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.jobcard .js div{display:flex;flex-direction:column;font-size:11.5px;color:var(--ink-2)}
+.jobcard .js b{font-family:var(--f-num);font-size:18px;color:var(--ink)}
+.curjob{margin:0 14px 12px;display:flex;flex-direction:column;gap:6px;background:var(--side-active);border-radius:8px;padding:10px 12px}
+.curjob .cj{color:#fff;font-weight:700;font-size:14px}
+.curjob button{all:unset;cursor:pointer;font-size:12px;color:var(--side-ink);text-decoration:underline}
+.linkname{all:unset;cursor:pointer;font-weight:700;color:var(--ink);border-bottom:1px dotted var(--ink-3)}
+.linkname:hover{color:var(--accent)}
+.linkname:focus-visible{outline:2px solid var(--accent)}
+.overlay{position:fixed;inset:0;background:rgba(15,18,30,.45);display:flex;justify-content:flex-end;z-index:20}
+.drawer{background:var(--card);width:min(560px,100%);height:100%;overflow:auto;padding:20px max(20px,env(safe-area-inset-right,0px)) 40px 22px;display:flex;flex-direction:column;gap:14px;box-shadow:-8px 0 30px rgba(0,0,0,.15)}
+.kv{display:grid;grid-template-columns:130px minmax(0,1fr);border-top:1px solid var(--line)}
+.kv div{padding:7px 8px;border-bottom:1px solid var(--line);font-size:13px;white-space:pre-wrap;word-break:break-word;min-width:0}
+.kv div:nth-child(odd){color:var(--ink-2);background:var(--card-2)}
+.stbl td,.stbl th{font-size:12.5px;white-space:nowrap}
+@media (max-width:1100px){.grid-home{grid-template-columns:minmax(0,1fr)}.tl{max-height:none}}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  aside.side{position:static;height:auto;flex-direction:row;align-items:center;padding:8px max(12px,env(safe-area-inset-left,0px));overflow-x:auto;gap:0}
+  .brand{padding:0 12px 0 0}.brand span{display:none}
+  .nav{flex-direction:row}.nav button{padding:8px 12px;border-left:0;border-bottom:3px solid transparent;white-space:nowrap}
+  .nav button[aria-current="page"]{border-bottom-color:var(--accent)}
+  .nav button .lbl{font-size:13px}.side .foot{display:none}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.two{grid-template-columns:minmax(0,1fr)}
+  .todo{grid-template-columns:repeat(2,minmax(0,1fr))}
+  form.req{grid-template-columns:minmax(0,1fr)}
+  .app-card{grid-template-columns:minmax(0,1fr)}.pill{justify-self:start}
+  main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+}
+.todo{grid-template-columns:repeat(5,minmax(0,1fr))}
+.task-label{grid-column:1/-1;font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:6px;background:var(--orange-soft);color:var(--orange)}
+.task-label.t-after{background:var(--accent-soft);color:var(--accent)}
+.task-label.t-send,.task-label.t-check{background:var(--red-soft);color:var(--red)}
+.tag.ok{background:var(--green-soft);color:var(--green)}
+.p-実施済み{background:var(--accent-soft);color:var(--accent)}
+.p-内定{background:var(--green-soft);color:var(--green)}
+.p-辞退,.p-欠席{background:var(--grey-soft);color:var(--ink-3)}
+.today-card{background:var(--card-2);border-radius:var(--r);padding:12px 14px;display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px 12px;align-items:start}
+.today-card .tc-time{font-family:var(--f-num);font-size:18px;font-weight:700;color:var(--accent)}
+.today-card .acts{grid-column:1/-1}
+.inline-form{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:var(--card-2);border-radius:6px;padding:10px 12px}
+.inline-form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ink-2)}
+.inline-form select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.inline-form .wide{flex-basis:100%}
+.drawer.wide{width:min(860px,100%)}
+.ivsheet{display:flex;flex-direction:column;gap:10px}
+.ivsheet h3{font-size:14px;margin:6px 0 0;padding-left:8px;border-left:3px solid var(--accent)}
+.ivhead th,.ivhead td{text-align:center;border:1px solid var(--line);font-size:12.5px;padding:6px 8px}
+.ivtext{white-space:pre-wrap;font-size:13px;line-height:1.7;background:var(--card-2);border-radius:6px;padding:10px 12px}
+#login{min-height:100vh;display:grid;place-items:center;padding:16px}
+.lg-box{background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:28px;width:min(420px,100%);display:flex;flex-direction:column;gap:14px}
+.lg-box form{display:flex;flex-direction:column;gap:10px}
+.lg-box label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink-2)}
+.lg-box input{font:inherit;font-size:16px;color:var(--ink);background:var(--card-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.lg-brand{padding:0;color:var(--ink)}
+.lg-msg{margin:0;font-size:13px;color:var(--ink-2);min-height:1em}
+.topbar .who{font-size:12px;color:var(--ink-2)}
+.topbar .lo{all:unset;cursor:pointer;font-size:12px;color:var(--accent)}
+@media (max-width:860px){.todo{grid-template-columns:repeat(2,minmax(0,1fr))}.today-card{grid-template-columns:minmax(0,1fr)}}
+.rangebar{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px}
+.rangebar .rg{display:flex;align-items:center;gap:6px;margin-left:auto}
+.rangebar input{font:inherit;color:var(--ink);background:var(--card-2);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+.kpis .kpi{cursor:default}
+.funnel{display:flex;flex-direction:column;gap:8px}
+.fn-row{display:grid;grid-template-columns:110px minmax(0,1fr) 140px;gap:10px;align-items:center}
+.fn-l{font-size:12.5px;color:var(--ink-2)}
+.fn-t{background:var(--card-2);border-radius:6px;height:30px}
+.fn-b{height:100%;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;min-width:34px}
+.fn-b b{color:#fff;font-family:var(--f-num);font-size:13px}
+.fn-row:last-child .fn-b{background:var(--green)}
+.fn-r{font-size:12px;color:var(--ink-2);font-family:var(--f-num)}
+.hbars{display:flex;flex-direction:column;gap:10px}
+.hb{display:grid;grid-template-columns:96px minmax(0,1fr) 36px;gap:4px 10px;align-items:center}
+.hb-l{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hb-t{background:var(--card-2);border-radius:4px;height:14px}
+.hb-b{height:100%;background:var(--accent);border-radius:4px}
+.hb-n{font-family:var(--f-num);font-weight:700;text-align:right}
+.hb-s{grid-column:2/-1;font-size:11.5px;color:var(--ink-3)}
+.cellbar{display:inline-flex;align-items:center;gap:6px;min-width:80px}
+.cellbar i{display:inline-block;height:8px;border-radius:4px;background:var(--accent);max-width:60px;flex:none}
+.bars.wk{height:190px;overflow-x:auto}
+.bars.wk .bar{min-width:42px}
+.stack{width:18px;background:var(--accent-soft);border-radius:6px 6px 2px 2px;display:flex;flex-direction:column;justify-content:flex-end;min-height:2px;overflow:hidden}
+.stack .b2{background:var(--accent)}
+.legend{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--ink-2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-left:8px}
+.legend .lg1{background:var(--accent-soft)} .legend .lg2{background:var(--accent)}
+details.card summary{cursor:pointer;list-style:none}
+details.card h3{font-size:13.5px;margin:10px 0 4px}
+@media (max-width:860px){.fn-row{grid-template-columns:80px minmax(0,1fr)}.fn-r{grid-column:2}.rangebar .rg{margin-left:0}}
+
+</style>
+</head>
+<body>
+<div id="login" hidden></div>
+<div class="app" id="app" hidden>
+  <aside class="side">
+    <div class="brand"><div class="mark">Ex</div><span>ExKey 採用ボード</span></div>
+    <div class="curjob" id="curjob" hidden></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="foot" id="foot"></div>
+  </aside>
+  <main>
+    <div class="topbar">
+      <input type="search" id="q" placeholder="名前・会社・職歴で検索" aria-label="応募者を検索">
+      <span class="mode" id="mode">日程調整の送信：–</span>
+      <span class="date" id="date"></span>
+      <span class="who" id="who"></span><button class="lo" id="logout" type="button">ログアウト</button>
+    </div>
+    <div id="banner" class="banner" hidden></div>
+    <div id="view"></div>
+  </main>
+</div>
+<script>
+(function(){
+  "use strict";
+  const API_URL="https://script.google.com/macros/s/AKfycbxFms1TAYk5h_hb3O5DTy3hgy-kBexTdlBY4rqWLiATYj-UMtSyP9-p3fQq1dlw4i_P/exec";
+  const NS="rb_"+API_URL.replace(/\/exec$/,"").slice(-12);
+  const ICON={
+    home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+    task:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    reply:'<path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/>',
+    cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+    req:'<path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/>',
+    scout:'<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
+    list:'<path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/>',
+    user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
+    check:'<path d="M5 12l5 5 9-10"/>',
+    gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>'
+  };
+  const svg=k=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+ICON[k]+'</svg>';
+  const VIEWS=[
+    {id:"home",label:"ホーム",icon:"home"},
+    {id:"tasks",label:"残りタスク",icon:"task",badge:()=>tasks().length},
+    {id:"replies",label:"返信待ち",icon:"reply",badge:()=>replies().length},
+    {id:"sched",label:"日程・面談",icon:"cal",badge:()=>state.apps.filter(a=>a.status==="送信確認待ち").length+todays().filter(a=>!doneToday(a)).length},
+    {id:"interviews",label:"面接記録",icon:"mic",badge:()=>state.ivs.filter(v=>byJobIv(v)&&(v.pending||[]).some(p=>p.status==="整形待ち")).length},
+    {id:"requests",label:"依頼・指示",icon:"req",badge:()=>state.reqs.filter(r=>r.status==="要確認").length},
+    {id:"scout",label:"スカウト",icon:"scout"},
+    {id:"stats",label:"集計・分析",icon:"check"},
+    {id:"all",label:"応募者一覧",icon:"list"},
+    {id:"settings",label:"設定",icon:"gear",admin:true}
+  ];
+  const JOBKEY={"広告運用":"ad","AIディレクター":"aid","AIサポート":"aisupport","デザイナー":"designer","AI常駐":"airesident","MEO運用":"meo"};
+  const ROUNDS=["1次","2次","3次","4次","5次"];
+  const INTERVIEWERS=["内田","折山"];
+  const ENDED=["見送り","辞退","欠席","内定"];
+  const state={view:"home",all:[],apps:[],reqs:[],ivs:[],settings:null,scouts:null,stats:{},jobs:null,selJob:null,detail:null,q:"",job:"すべて",stFilter:"進行中",me:null,confirming:null,nexting:null,busy:{},loaded:false,users:null,ivOpen:null};
+  try{const v=localStorage.getItem(NS+"view");if(v&&VIEWS.some(x=>x.id===v))state.view=v;const j=localStorage.getItem(NS+"job");if(j)state.selJob=j;}catch(e){}
+  const $=s=>document.querySelector(s);
+  const z=n=>String(n).padStart(2,"0");
+  function today(){const d=new Date();return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate());}
+  function days(s){if(!s)return null;return Math.round((new Date(today()+"T00:00:00")-new Date(String(s).slice(0,10)+"T00:00:00"))/864e5);}
+  function el(t,a,...k){const e=document.createElement(t);if(a)for(const[n,v]of Object.entries(a)){if(v==null||v===false)continue;if(n==="class")e.className=v;else if(n==="html")e.innerHTML=v;else if(n.startsWith("on"))e.addEventListener(n.slice(2),v);else e.setAttribute(n,v===true?"":v);}for(const c of k){if(c==null||c===false)continue;e.append(c.nodeType?c:document.createTextNode(String(c)));}return e;}
+  function when(s){if(!s)return"";const str=String(s);const d=new Date(str.length===10?str+"T00:00:00":str);if(isNaN(d))return str;const w="日月火水木金土"[d.getDay()];const base=(d.getMonth()+1)+"/"+d.getDate()+"("+w+")";return str.length===10?base:base+" "+z(d.getHours())+":"+z(d.getMinutes());}
+  function hm(s){const d=new Date(s);return isNaN(d)||String(s).length<=10?"":z(d.getHours())+":"+z(d.getMinutes());}
+  function md(s){return s?String(s).slice(5,10).replace("-","/"):"";}
+  const nk=s=>String(s||"").replace(/[\s　]/g,"").replace(/[（(].*$/,"").replace(/さん$/,"");
+  const isAfter=a=>["実施済み","選考中"].includes(a.status)||(a.status==="日程確定"&&a.interviewAt&&String(a.interviewAt).slice(0,10)<today());
+  const tasks=()=>state.apps.filter(a=>["未選考","送信確認待ち","要確認"].includes(a.status)||isAfter(a));
+  function taskKind(a){
+    if(a.status==="未選考")return {k:"doc",l:"書類選考：1次面接に進めるか判断"};
+    if(a.status==="送信確認待ち")return {k:"send",l:"送信の確認："+((a.nextRound&&a.nextRound.round)||"1次")+"面接の日程調整メッセージ"};
+    if(a.status==="要確認")return {k:"check",l:"要確認"};
+    if(isAfter(a)){const r=roundOf(a);return {k:"after",l:r+"面接後："+nextRound(r)+"面接に進めるか判断（内定・見送りも）"};}
+    return null;
+  }
+  const replies=()=>state.apps.filter(a=>a.reply&&!a.reply.handled);
+  const todays=()=>state.apps.filter(a=>a.interviewAt&&String(a.interviewAt).slice(0,10)===today()&&["日程確定","選考中","実施済み","欠席","辞退","日程調整中"].includes(a.status)).sort((x,y)=>String(x.interviewAt).localeCompare(String(y.interviewAt)));
+  const doneToday=a=>["実施済み","欠席","辞退","日程調整中"].includes(a.status)&&a.lastResultDate===today();
+  const STATUS_COLOR={"未選考":"orange","通過":"blue","日程調整中":"blue","選考中":"blue","送信確認待ち":"red","要確認":"red","日程確定":"green","実施済み":"blue","内定":"green","見送り":"grey","辞退":"grey","欠席":"grey"};
+  function matchQ(a){const q=state.q.trim().toLowerCase();return !q||[a.name,a.company,a.school,a.summary,a.media,a.job].join(" ").toLowerCase().includes(q);}
+  const roundOf=a=>a.currentRound||"1次";
+  const nextRound=r=>ROUNDS[Math.min(ROUNDS.length-1,ROUNDS.indexOf(r)+1)]||"2次";
+  function ivFor(a){return state.ivs.find(v=>v.applicantId===a.id)||state.ivs.find(v=>nk(v.name)&&nk(v.name)===nk(a.name));}
+  function byJobIv(v){if(!state.selJob||state.selJob==="すべての職種")return true;return (v.job||"広告運用")===state.selJob;}
+
+  // ---------------------------------------------------------------- 通信
+  let token="";try{token=localStorage.getItem(NS+"token")||"";}catch(e){}
+  async function post(body,retry){
+    retry=retry==null?2:retry;
+    try{const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(body),credentials:"omit",redirect:"follow"});const j=await r.json();return j;}
+    catch(e){if(retry>0){await new Promise(r=>setTimeout(r,800));return post(body,retry-1);}return {ok:false,error:"通信できませんでした。ネットワークを確認してください"};}
+  }
+  async function api(name,...args){
+    const j=await post({action:"call",token,name,args});
+    if(!j.ok){if(j.auth){logout(true);}throw new Error(j.error||"エラーが発生しました");}
+    return j.data;
+  }
+  function logout(expired){try{localStorage.removeItem(NS+"token");}catch(e){}if(token&&!expired)post({action:"logout",token});token="";state.me=null;showLogin(expired?"ログインの有効期限が切れました。もう一度ログインしてください。":"");}
+
+  function ingest(d){
+    const docs=d.docs||{};state.me=d.me;
+    const by=p=>Object.keys(docs).filter(k=>k.startsWith(p+"/")).map(k=>Object.assign({id:k.slice(p.length+1),_path:k},docs[k]));
+    state.all=by("applicants");state.reqs=by("requests");state.ivs=by("interviews");
+    const st={};by("stats").forEach(s=>st[s.id]=s);state.stats=st;
+    state.jobs=docs["meta/jobs"]||null;state.settings=docs["meta/settings"]||null;state.scouts=docs["meta/scouts"]||null;
+    state.loaded=true;state.loadedAt=d.at;applyJob();
+  }
+  async function load(silent){
+    try{const d=await api("load");ingest(d);if(!silent)banner("");render();}
+    catch(e){if(token)banner("読み込みに失敗しました："+e.message,true);}
+  }
+  async function upd(path,patch){
+    try{const data=await api("update",path,patch);const [coll,id]=path.split("/");const arr=coll==="applicants"?state.all:coll==="requests"?state.reqs:coll==="interviews"?state.ivs:null;
+      if(arr){const i=arr.findIndex(x=>x.id===id);const o=Object.assign({id,_path:path},data);if(i>=0)arr[i]=o;else arr.push(o);}else if(path==="meta/settings")state.settings=data;
+      applyJob();return true;}
+    catch(e){banner("保存できませんでした："+e.message,true);return false;}
+  }
+  async function setApp(a,patch){if(state.busy[a.id])return;state.busy[a.id]=true;render();await upd("applicants/"+a.id,patch);delete state.busy[a.id];render();}
+  function banner(m,err){const b=$("#banner");b.textContent=m||"";b.className="banner"+(err?" err":"");b.hidden=!m;}
+  function applyJob(){state.apps=state.all.filter(a=>!state.selJob||state.selJob==="すべての職種"||a.job===state.selJob);}
+  function pickJob(j){state.selJob=j;try{j?localStorage.setItem(NS+"job",j):localStorage.removeItem(NS+"job")}catch(e){}applyJob();state.view="home";render();window.scrollTo(0,0);}
+
+  // ---------------------------------------------------------------- 応募者カード
+  function pillText(a){
+    if(a.status==="通過"){const n=a.nextRound;return n?n.round+"面接（"+(n.mode||"")+"）の日程調整待ち":"送信待ち（次回の自動処理）";}
+    if(a.status==="日程確定")return roundOf(a)+"面接 日程確定";
+    if(a.status==="日程調整中")return roundOf(a)+"面接 日程調整中";
+    if(a.status==="実施済み")return roundOf(a)+"面接 実施済み";
+    return a.status;
+  }
+  function nextForm(a){
+    const cur=a.status==="未選考"||a.status==="要確認"?null:roundOf(a);const def=cur?nextRound(cur):"1次";
+    const f=el("form",{class:"inline-form",onsubmit:e=>{e.preventDefault();const fd=new FormData(f);const r=fd.get("round"),mode=fd.get("mode"),who=fd.get("who");state.nexting=null;
+      setApp(a,{status:"通過",decidedAt:new Date().toISOString(),note:"",nextRound:{round:r,mode:r==="1次"?"オンライン（TimeRex）":mode,interviewer:who,requestedAt:new Date().toISOString()}});}},
+      el("label",{},"面接",el("select",{name:"round"},...ROUNDS.map(r=>el("option",{selected:r===def?true:null},r)))),
+      el("label",{},"形式",el("select",{name:"mode"},el("option",{},"オンライン"),el("option",{},"対面"))),
+      el("label",{},"面接者",el("select",{name:"who"},...INTERVIEWERS.map(x=>el("option",{},x)),el("option",{},"内田・折山"))),
+      el("button",{class:"btn pri",type:"submit"},"日程調整を頼む"),el("button",{class:"btn",type:"button",onclick:()=>{state.nexting=null;render();}},"やめる"),
+      el("span",{class:"muted wide"},"対面は面接者のサイボウズの空きから候補日を出して調整します。オンラインはTimeRexで送ります。"));
+    return f;
+  }
+  function appCard(a,opt){
+    opt=opt||{};
+    const d=days(a.appliedAt);const late=a.status==="未選考"&&d!=null&&d>=3;
+    const c=el("article",{class:"app-card"+(late?" late":"")},
+      el("div",{},
+        el("div",{style:"display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline"},el("button",{class:"linkname nm",onclick:()=>openDetail(a)},a.name||"（名前なし）"),el("span",{class:"mt"},[a.age,a.company,a.school].filter(Boolean).join(" ／ "))),
+        el("div",{class:"tags",style:"margin-top:6px"},
+          el("span",{class:"tag job"},a.job||"職種未設定"),
+          el("span",{class:"tag"},(a.media||"")+(a.route?"・"+a.route:"")),
+          a.appliedAt?el("span",{class:"tag"+(late?" late":"")},"応募 "+md(a.appliedAt)+(d!=null?"（"+(d===0?"今日":d+"日前")+"）":"")):null,
+          a.sheetRow?el("span",{class:"tag"},(a.tab||"").replace("⭐️","")+" "+a.sheetRow+"行目"):null,
+          ivFor(a)?el("span",{class:"tag ok"},"面接記録あり"):null)),
+      el("span",{class:"pill p-"+a.status},pillText(a)));
+    const tk=taskKind(a);if(tk)c.append(el("div",{class:"task-label t-"+tk.k},tk.l));
+    if(a.remindedAt&&a.status==="日程調整中")c.append(el("div",{class:"note"},"返信がないため "+md(a.remindedAt)+" にリマインドを送信済み"));
+    if(a.interviewAt&&["日程確定","選考中"].includes(a.status))c.append(el("div",{class:"note"},roundOf(a)+"面接 "+when(a.interviewAt)+(a.interviewMode?"（"+a.interviewMode+"）":"")+(a.interviewer?" 面接者："+a.interviewer:"")));
+    if(a.reply&&!a.reply.handled)c.append(el("div",{class:"note reply"},"返信あり（"+when(a.reply.at)+"）："+(a.reply.text||"")));
+    if(a.note)c.append(el("div",{class:"note"+(["要確認","送信確認待ち"].includes(a.status)?" warn":"")},a.note));
+    if(!opt.compact)c.append(el("div",{class:"sum"+(a.summary?"":" empty")},a.summary||"職歴の要約はまだありません（次回の自動処理で入ります）"));
+    const acts=el("div",{class:"acts"});const dis=!!state.busy[a.id];const now=new Date().toISOString();
+    if(state.nexting===a.id){c.append(nextForm(a));return c;}
+    if(a.status==="未選考"||a.status==="要確認"){
+      if(state.confirming===a.id){acts.append(el("span",{class:"muted"},"見送りにしますか？"),el("button",{class:"btn dng",disabled:dis,onclick:()=>{state.confirming=null;setApp(a,{status:"見送り",decidedAt:now,note:""});}},"見送りにする"),el("button",{class:"btn",onclick:()=>{state.confirming=null;render();}},"やめる"));}
+      else acts.append(el("button",{class:"btn pri",disabled:dis,onclick:()=>setApp(a,{status:"通過",decidedAt:now,note:"",nextRound:{round:"1次",mode:"オンライン（TimeRex）",interviewer:"内田",requestedAt:now}})},"1次面接に進める"),el("button",{class:"btn",disabled:dis,onclick:()=>{state.confirming=a.id;render();}},"見送り"));
+    }else if(a.status==="通過"){acts.append(el("span",{class:"muted"},"次の自動処理で日程調整の連絡をします。"),el("button",{class:"btn",disabled:dis,onclick:()=>setApp(a,{status:a.currentRound?"実施済み":"未選考",nextRound:null,decidedAt:null})},"取り消す"));}
+    else if(a.status==="送信確認待ち"){acts.append(el("button",{class:"btn pri",disabled:dis,onclick:()=>setApp(a,{status:"日程調整中",confirmedSend:true,sentAt:now,note:"内容を確認して送信済み"})},"確認して送信した"),el("button",{class:"btn",disabled:dis,onclick:()=>setApp(a,{status:"要確認",note:"送信前の確認で止めました。文面を直して送るか、見送りにしてください。"})},"送らずに止める"));}
+    else if((isAfter(a)||a.status==="日程確定")&&!opt.today){
+      if(state.confirming===a.id){acts.append(el("span",{class:"muted"},"見送りにしますか？"),el("button",{class:"btn dng",disabled:dis,onclick:()=>{state.confirming=null;setApp(a,{status:"見送り",decidedAt:now,note:""});}},"見送りにする"),el("button",{class:"btn",onclick:()=>{state.confirming=null;render();}},"やめる"));}
+      else acts.append(el("button",{class:"btn pri",disabled:dis,onclick:()=>{state.nexting=a.id;render();}},"次の面接に進める"),el("button",{class:"btn",disabled:dis,onclick:()=>setApp(a,{status:"内定",decidedAt:now})},"内定"),el("button",{class:"btn",disabled:dis,onclick:()=>{state.confirming=a.id;render();}},"見送り"),el("button",{class:"btn",onclick:()=>openTranscript(a)},"文字起こしを貼る"));
+    }
+    else if(ENDED.includes(a.status)){acts.append(el("button",{class:"btn",disabled:dis,onclick:()=>setApp(a,{status:a.currentRound?"実施済み":"未選考",decidedAt:null})},"元に戻す"));}
+    if(a.reply&&!a.reply.handled){acts.append(el("button",{class:"btn",disabled:dis,onclick:()=>newRequest({type:"応募者への返信",media:a.media,target:a.name,applicantId:a.id,detail:"「"+(a.reply.text||"").slice(0,80)+"」への返信"})},"返信を依頼"),el("button",{class:"btn",disabled:dis,onclick:()=>setApp(a,{reply:Object.assign({},a.reply,{handled:true,handledAt:now})})},"対応済みにする"));}
+    if(acts.childNodes.length)c.append(acts);return c;
+  }
+  async function newRequest(r){
+    try{const res=await api("add","requests",Object.assign({status:"依頼中"},r));state.reqs.push(Object.assign({id:res.id},res.data));banner("依頼を登録しました。次の自動処理で実行します。");render();}
+    catch(e){banner("依頼を登録できませんでした："+e.message,true);}
+  }
+  function list(rows,emptyMsg,opt){const l=el("div",{class:"list"});if(!rows.length)l.append(el("div",{class:"empty"},state.loaded?emptyMsg:"読み込み中…"));else rows.forEach(a=>l.append(appCard(a,opt)));return l;}
+
+  // ---------------------------------------------------------------- 今日の面接（実施・欠席・辞退・リスケ）
+  function todayCard(a){
+    const c=el("article",{class:"today-card"});const iv=ivFor(a);const r=roundOf(a);const td=today();
+    const pend=iv?(iv.pending||[]).filter(p=>p.round===r):[];
+    c.append(el("div",{class:"tc-time"},hm(a.interviewAt)||"--:--"),
+      el("div",{class:"tc-main"},
+        el("div",{style:"display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline"},el("button",{class:"linkname nm",onclick:()=>openDetail(a)},a.name),el("span",{class:"mt"},[a.age,a.company].filter(Boolean).join(" ／ "))),
+        el("div",{class:"tags",style:"margin-top:4px"},el("span",{class:"tag job"},a.job||""),el("span",{class:"tag"},r+"面接"),a.interviewMode?el("span",{class:"tag"},a.interviewMode):null,a.interviewer?el("span",{class:"tag"},"面接者 "+a.interviewer):null,el("span",{class:"tag"},a.media||""))));
+    const acts=el("div",{class:"acts"});const now=new Date().toISOString();const dis=!!state.busy[a.id];
+    const result=a.lastResultDate===td?a.lastResult:null;
+    if(result){
+      acts.append(el("span",{class:"pill p-"+(result==="実施"?"日程確定":"見送り")},result==="実施"?"実施済み":result));
+      if(result==="実施"){
+        acts.append(pend.length?el("span",{class:"tag ok"},"文字起こし "+pend.length+"件"+(pend.some(p=>p.status==="整形待ち")?"（整形待ち）":"（整形済み）")):el("button",{class:"btn pri",onclick:()=>openTranscript(a)},"文字起こしを貼る"));
+        if(pend.length)acts.append(el("button",{class:"btn",onclick:()=>openTranscript(a)},"追加で貼る"));
+      }
+      acts.append(el("button",{class:"btn",disabled:dis,onclick:()=>setApp(a,{status:"日程確定",lastResult:null,lastResultDate:null,note:""})},"取り消す"));
+    }else{
+      acts.append(
+        el("button",{class:"btn pri",disabled:dis,onclick:()=>{setApp(a,{status:"実施済み",lastResult:"実施",lastResultDate:td,doneAt:now}).then(()=>openTranscript(a));}},"実施した → 文字起こしを貼る"),
+        el("button",{class:"btn",disabled:dis,onclick:()=>{const t=prompt("リスケの理由や希望日（分かれば）","");if(t===null)return;setApp(a,{status:"日程調整中",lastResult:"リスケ",lastResultDate:td,note:"リスケ："+(t||"理由なし"),nextRound:{round:r,mode:a.interviewMode||"オンライン",interviewer:a.interviewer||"内田",requestedAt:now,reschedule:true},rescheduleCount:(a.rescheduleCount||0)+1});}},"リスケ"),
+        el("button",{class:"btn",disabled:dis,onclick:()=>{if(!confirm(a.name+" さんを「辞退」にしますか？"))return;setApp(a,{status:"辞退",lastResult:"辞退",lastResultDate:td,decidedAt:now});}},"辞退"),
+        el("button",{class:"btn dng",disabled:dis,onclick:()=>{if(!confirm(a.name+" さんを「欠席（連絡なし）」にしますか？"))return;setApp(a,{status:"欠席",lastResult:"欠席",lastResultDate:td,decidedAt:now});}},"欠席（連絡なし）"));
+    }
+    c.append(acts);return c;
+  }
+  function todaySection(){
+    const rows=todays().filter(matchQ);
+    return el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"今日の面接（"+md(today())+"）"),el("span",{class:"muted"},"終わったら「実施した」を押して文字起こしを貼ってください")),
+      rows.length?el("div",{class:"list"},...rows.map(todayCard)):el("div",{class:"muted"},"今日の面接はありません"));
+  }
+
+  // ---------------------------------------------------------------- 文字起こしの貼り付け
+  function openTranscript(a,ivPath){
+    document.querySelectorAll(".overlay").forEach(o=>o.remove());
+    const iv=a?ivFor(a):state.ivs.find(v=>v._path===ivPath);const name=a?a.name:(iv&&iv.name)||"";
+    const r=a?roundOf(a):"1次";
+    const f=el("form",{class:"req",onsubmit:async e=>{e.preventDefault();const fd=new FormData(f);const text=String(fd.get("text")||"").trim();
+      if(text.length<30){msg.textContent="文字起こしを貼り付けてください。";return;}
+      btn.disabled=true;msg.textContent="保存しています…";
+      try{const res=await api("addTranscript",{applicantId:a?a.id:(iv&&iv.applicantId)||"",name:fd.get("name")||name,job:a?a.job:(iv&&iv.job)||"",media:a?a.media:(iv&&iv.media)||"",round:fd.get("round"),interviewer:fd.get("who"),date:fd.get("date"),mode:fd.get("mode"),text,interviewPath:iv?iv._path:""});
+        const id=res.path.split("/")[1];const i=state.ivs.findIndex(x=>x.id===id);const o=Object.assign({id,_path:res.path},res.data);if(i>=0)state.ivs[i]=o;else state.ivs.push(o);
+        close();banner(name+" さんの文字起こしを保存しました。次の自動処理（毎時）で面接シートの形式に整えて表示します。");render();}
+      catch(err){btn.disabled=false;msg.textContent="保存できませんでした："+err.message;}}},
+      el("label",{},"候補者",el("input",{name:"name",value:name,readonly:a?true:null,required:true})),
+      el("label",{},"面接",el("select",{name:"round"},...ROUNDS.map(x=>el("option",{selected:x===r?true:null},x)))),
+      el("label",{},"面接者",el("select",{name:"who"},...INTERVIEWERS.map(x=>el("option",{selected:a&&a.interviewer===x?true:null},x)),el("option",{},"内田・折山"),el("option",{},"その他"))),
+      el("label",{},"面接日",el("input",{name:"date",type:"date",value:a&&a.interviewAt?String(a.interviewAt).slice(0,10):today()})),
+      el("label",{},"形式",el("select",{name:"mode"},el("option",{selected:a&&/対面/.test(a.interviewMode||"")?null:true},"オンライン"),el("option",{selected:a&&/対面/.test(a.interviewMode||"")?true:null},"対面"))),
+      el("label",{class:"wide"},"音声の文字起こし（そのまま貼り付け）",el("textarea",{name:"text",style:"min-height:280px",placeholder:"文字起こしの全文を貼り付けてください。"})));
+    const btn=el("button",{class:"btn pri",type:"submit"},"保存する");const msg=el("span",{class:"muted"},"");
+    f.append(el("div",{class:"wide",style:"display:flex;gap:10px;align-items:center;flex-wrap:wrap"},btn,msg));
+    const close=()=>{document.querySelectorAll(".overlay").forEach(o=>o.remove());};
+    const ov=el("div",{class:"overlay",onclick:e=>{if(e.target===ov)close();}},el("div",{class:"drawer",role:"dialog","aria-label":"文字起こしを貼る"},
+      el("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:8px"},el("h2",{style:"font-size:18px"},"文字起こしを貼る"),el("button",{class:"btn",onclick:close},"閉じる")),
+      el("span",{class:"muted"},"保存すると、次の自動処理で「面接ヒアリングシート」（佐藤 潤さんのときと同じ形式）に整えて、面接記録と面接シートに入ります。"),f));
+    document.body.append(ov);setTimeout(()=>{const t=f.querySelector("textarea");t&&t.focus();},50);
+  }
+
+  // ---------------------------------------------------------------- 面接記録（面接シートと同じ形式）
+  const HEAR=[["氏名","氏名"],["募集を知った経緯","募集を知った\n経緯"],["応募区分","応募区分"],["職業区分","職業区分"],["前職（現職）の内容","前職（現職）の内容"],["前職を離職した理由","前職を離職した理由"],["応募理由","応募理由"],["経験","経験"],["職種の希望","職種の希望"]];
+  const COND=[["給与","労働条件の希望"],["就業時間",""],["休日",""],["勤務開始時期","勤務について"],["勤務地の希望",""],["転勤",""]];
+  function ivView(v){
+    const box=el("div",{class:"ivsheet"});const s=v.sheet||{};const rounds=(v.rounds||[]).slice().sort((a,b)=>ROUNDS.indexOf(a.round)-ROUNDS.indexOf(b.round));
+    const n=Math.max(3,rounds.length);
+    const head=el("table",{class:"ivhead"});const tr1=el("tr",{},el("th",{rowspan:"2"},"媒体"),el("th",{rowspan:"2"},"面接日"));const tr2=el("tr");const tr3=el("tr",{},el("td",{},v.media||s["募集を知った経緯"]||""),el("td",{class:"num"},v.date?when(v.date):""));
+    for(let i=0;i<n;i++){const r=rounds[i]||{round:ROUNDS[i]};tr1.append(el("th",{colspan:"3"},r.round||ROUNDS[i]));tr2.append(el("th",{},"面接者"),el("th",{},"点数"),el("th",{},"通過"));tr3.append(el("td",{},r.interviewer||""),el("td",{class:"num"},r.score||""),el("td",{},r.pass===true||r.pass==="TRUE"?"✓":r.pass===false||r.pass==="FALSE"?"":String(r.pass||"")));}
+    head.append(el("thead",{},tr1,tr2),el("tbody",{},tr3));
+    box.append(el("div",{class:"tbl"},head),el("h3",{},"面接ヒアリングシート"));
+    const kv=el("div",{class:"kv"});
+    HEAR.forEach(([k,l])=>{kv.append(el("div",{},l),el("div",{},s[k]||""));});
+    COND.forEach(([k,g])=>{kv.append(el("div",{},(g?g+"｜":"")+k),el("div",{},s[k]||""));});
+    box.append(kv);
+    rounds.forEach(r=>{if(r.comment)box.append(el("h3",{},r.round+(r.date?"（"+when(r.date)+"）":"")+(r.interviewer?" 面接者："+r.interviewer:"")),el("div",{class:"ivtext"},r.comment));});
+    if(!rounds.some(r=>r.comment))box.append(el("div",{class:"muted"},"面接の所感はまだありません。"));
+    const pend=(v.pending||[]).filter(p=>p.status==="整形待ち");
+    if(pend.length)box.append(el("div",{class:"note warn"},"整形待ちの文字起こし："+pend.map(p=>p.round+"（"+(p.interviewer||"")+"・"+md(p.date)+"・"+p.chars+"字）").join("、")+"。次の自動処理で反映します。"));
+    if(v.sheetTab)box.append(el("span",{class:"muted"},"面接シートのタブ「"+v.sheetTab+"」"+(v.source==="面接シート"?"から取り込み":"にも書き込み済み")));
+    return box;
+  }
+  function vInterviews(){
+    const q=state.q.trim();const rows=state.ivs.filter(byJobIv).filter(v=>!q||(v.name||"").includes(q)).sort((a,b)=>String(b.date||b.createdAt||"").localeCompare(String(a.date||a.createdAt||"")));
+    const box=el("div",{class:"col"},title("面接記録","面接シート（"+state.ivs.filter(v=>v.source==="面接シート").length+"人分）を取り込み済み。新しい面接は文字起こしを貼ると同じ形式で入ります。"),todaySection());
+    const tb=el("table",{},el("thead",{},el("tr",{},...["面接日","名前","媒体","1次","2次","3次以降","状態"].map(h=>el("th",{},h)))));const b=el("tbody");
+    rows.forEach(v=>{const R=x=>{const r=(v.rounds||[]).find(y=>y.round===x);return r?(r.interviewer||"")+(r.score?" "+r.score:"")+(r.pass===true||r.pass==="TRUE"?" ✓":""):"";};
+      const later=(v.rounds||[]).filter(r=>ROUNDS.indexOf(r.round)>=2).map(r=>r.round+" "+(r.interviewer||"")).join("、");
+      const pend=(v.pending||[]).some(p=>p.status==="整形待ち");
+      b.append(el("tr",{},el("td",{class:"num"},v.date?md(v.date):""),el("td",{},el("button",{class:"linkname",onclick:()=>{state.ivOpen=v._path;renderIv();}},v.name||"")),el("td",{},v.media||""),el("td",{},R("1次")),el("td",{},R("2次")),el("td",{},later),el("td",{},pend?el("span",{class:"st orange"},"整形待ち"):el("span",{class:"st green"},"記録済み"))));});
+    if(!rows.length)b.append(el("tr",{},el("td",{colspan:"7",class:"muted"},"面接記録はありません")));tb.append(b);
+    box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"面接した人"),el("span",{class:"muted"},rows.length+"人")),el("div",{class:"tbl"},tb)));
+    return box;
+  }
+  function renderIv(){
+    document.querySelectorAll(".overlay").forEach(o=>o.remove());
+    const v=state.ivs.find(x=>x._path===state.ivOpen);if(!v)return;
+    const close=()=>{state.ivOpen=null;document.querySelectorAll(".overlay").forEach(o=>o.remove());};
+    const a=state.all.find(x=>x.id===v.applicantId)||state.all.find(x=>nk(x.name)===nk(v.name));
+    const ov=el("div",{class:"overlay",onclick:e=>{if(e.target===ov)close();}},el("div",{class:"drawer wide",role:"dialog","aria-label":(v.name||"")+" の面接記録"},
+      el("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"},el("h2",{style:"font-size:18px"},(v.name||"")+" の面接記録"),
+        el("div",{style:"display:flex;gap:8px"},el("button",{class:"btn",onclick:()=>a?openTranscript(a):openTranscript(null,v._path)},"文字起こしを貼る"),a?el("button",{class:"btn",onclick:()=>{close();openDetail(a);}},"応募者の情報"):null,el("button",{class:"btn",onclick:close},"閉じる"))),
+      ivView(v)));
+    document.body.append(ov);
+  }
+
+  // ---------------------------------------------------------------- 応募者の詳細
+  function openDetail(a){state.detail=a.id;renderDetail();}
+  function renderDetail(){
+    document.querySelectorAll(".overlay").forEach(o=>o.remove());
+    const a=state.all.find(x=>x.id===state.detail);if(!a)return;
+    const close=()=>{state.detail=null;document.querySelectorAll(".overlay").forEach(o=>o.remove());};
+    const kv=el("div",{class:"kv"});
+    const order=Array.isArray(a.fieldOrder)?a.fieldOrder:Object.keys(a.fields||{});
+    order.forEach(k=>{let v=(a.fields||{})[k];if(v==="TRUE")v="✓";else if(v==="FALSE")v="—";kv.append(el("div",{},k),el("div",{},v||""));});
+    const iv=ivFor(a);
+    const ov=el("div",{class:"overlay",onclick:e=>{if(e.target===ov)close();}},
+      el("div",{class:"drawer"+(iv?" wide":""),role:"dialog","aria-label":a.name+" の詳細"},
+        el("div",{style:"display:flex;justify-content:space-between;align-items:center;gap:8px"},el("h2",{style:"font-size:18px"},a.name),el("div",{style:"display:flex;gap:8px"},el("button",{class:"btn",onclick:()=>openTranscript(a)},"文字起こしを貼る"),el("button",{class:"btn",onclick:close},"閉じる"))),
+        el("div",{class:"tags"},el("span",{class:"tag job"},a.job||""),el("span",{class:"tag"},(a.media||"")+(a.route?"・"+a.route:"")),el("span",{class:"pill p-"+a.status},pillText(a)),a.sheetRow?el("span",{class:"tag"},(a.tab||"").replace("⭐️","")+" "+a.sheetRow+"行目"):null),
+        a.interviewAt?el("div",{class:"note"},roundOf(a)+"面接 "+when(a.interviewAt)):null,
+        iv?el("h2",{},"面接記録"):null,iv?ivView(iv):null,
+        el("h2",{},"シートの内容（全列）"),kv,
+        el("span",{class:"muted"},"シートを正として、自動処理のたびに最新の内容に更新されます。")));
+    document.body.append(ov);
+  }
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"){state.detail=null;state.ivOpen=null;document.querySelectorAll(".overlay").forEach(o=>o.remove());}});
+
+  // ---------------------------------------------------------------- 各画面
+  function vPicker(){
+    const order=(state.jobs&&state.jobs.order)||Object.keys(JOBKEY);const active=(state.jobs&&state.jobs.active)||order;
+    const g=el("div",{class:"picker"});const mo=today().slice(0,7);
+    [...order,"すべての職種"].forEach(j=>{const rows=j==="すべての職種"?state.all:state.all.filter(a=>a.job===j);
+      const n=f=>rows.filter(f).length;
+      g.append(el("button",{class:"jobcard"+(active.includes(j)||j==="すべての職種"?"":" idle"),onclick:()=>pickJob(j)},
+        el("span",{class:"jn"},j),
+        el("span",{class:"muted"},j==="すべての職種"?"全職種をまとめて見る":(active.includes(j)?"募集中":"10月以降の応募なし")),
+        el("div",{class:"js"},el("div",{},el("b",{},n(a=>["未選考","送信確認待ち","要確認"].includes(a.status))),"残りタスク"),el("div",{},el("b",{},n(a=>a.status==="日程確定")),"面談予定"),el("div",{},el("b",{},n(a=>String(a.appliedAt||"").startsWith(mo))),"今月の応募"))));});
+    return el("div",{class:"col"},title("どの採用職種を見ますか？","選んだ職種の応募者・面談・集計だけを表示します。あとから左のメニューで切り替えられます。"),g);
+  }
+  // ---------------------------------------------------------------- 集計（期間を選んで分析）
+  function stageOf(a){
+    const f=a.fields||{};const ss=String(a.sheetStatus||f["進捗"]||f["ステータス"]||"");const st=a.status;
+    const r=ROUNDS.indexOf(a.currentRound||"");const no=/バック|欠席/.test(String(f["1次選考"]||""));
+    let s=0;
+    if(!/^(書類選考|書類選考NG|退会済)?$/.test(ss)||!["未選考","見送り","要確認"].includes(st)) s=1;
+    if(st==="見送り"&&/書類/.test(ss)) s=0;
+    if(!no&&st!=="欠席"&&((f["1次選考"]&&String(f["1次選考"]).trim())||["実施済み","選考中","内定"].includes(st)||r>=1||/二次|三次|内定|採用見送り/.test(ss))) s=Math.max(s,2);
+    if(r>=1||/二次|三次|内定|採用見送り\(二次\)/.test(ss)||(f["2次選考"]&&String(f["2次選考"]).trim())) s=Math.max(s,3);
+    if(st==="内定"||/内定/.test(ss)||f["内定"]==="TRUE") s=4;
+    return s;
+  }
+  const STAGES=["応募","書類通過","1次面接 実施","2次以降へ","内定"];
+  function ymd(d){return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate());}
+  function presetRange(k){const d=new Date();const y=d.getFullYear(),m=d.getMonth();
+    if(k==="今月")return [ymd(new Date(y,m,1)),ymd(d)];
+    if(k==="先月")return [ymd(new Date(y,m-1,1)),ymd(new Date(y,m,0))];
+    if(k==="直近30日")return [ymd(new Date(Date.now()-29*864e5)),ymd(d)];
+    if(k==="直近90日")return [ymd(new Date(Date.now()-89*864e5)),ymd(d)];
+    return ["2026-10-01",ymd(d)];}
+  if(!state.range)state.range={k:"今月",from:presetRange("今月")[0],to:presetRange("今月")[1]};
+  const pct=(a,b)=>b?Math.round(a/b*1000)/10+"%":"–";
+  function hbar(label,n,max,sub,cls){return el("div",{class:"hb"},el("span",{class:"hb-l",title:label},label),el("div",{class:"hb-t"},el("div",{class:"hb-b "+(cls||""),style:"width:"+(max?Math.max(2,n/max*100):0)+"%"})),el("span",{class:"hb-n"},n),el("span",{class:"hb-s"},sub||""));}
+  function vStats(){
+    const R=state.range;const box=el("div",{class:"col"},title("集計・分析","応募日で期間を絞り込みます（2026年10月以降のデータ）"));
+    const bar=el("div",{class:"card rangebar"});
+    ["今月","先月","直近30日","直近90日","10月以降すべて"].forEach(k=>bar.append(el("button",{class:"chip","aria-pressed":String(R.k===k),onclick:()=>{const r=presetRange(k);state.range={k,from:r[0],to:r[1]};render();}},k)));
+    const fi=el("input",{type:"date",value:R.from,"aria-label":"開始日",onchange:e=>{state.range={k:"",from:e.target.value,to:R.to};render();}});
+    const ti=el("input",{type:"date",value:R.to,"aria-label":"終了日",onchange:e=>{state.range={k:"",from:R.from,to:e.target.value};render();}});
+    bar.append(el("span",{class:"rg"},fi,"〜",ti));box.append(bar);
+    const rows=state.apps.filter(byJob).filter(a=>a.appliedAt&&a.appliedAt>=R.from&&a.appliedAt<=R.to);
+    const st=rows.map(stageOf);const cnt=STAGES.map((_,i)=>st.filter(x=>x>=i).length);
+    const ended={見送り:rows.filter(a=>a.status==="見送り").length,辞退:rows.filter(a=>a.status==="辞退").length,欠席:rows.filter(a=>a.status==="欠席").length,選考中:rows.filter(a=>!ENDED.includes(a.status)).length};
+    const kp=el("div",{class:"kpis"});
+    [["応募",cnt[0],"blue","user"],["1次面接 実施",cnt[2],"green","mic"],["内定",cnt[4],"green","check"],["選考中",ended.選考中,"orange","task"]].forEach(([l,n,c,i])=>kp.append(el("div",{class:"kpi"},el("div",{class:"ic "+c,html:svg(i)}),el("div",{},el("div",{class:"n"},n),el("div",{class:"l"},l)))));
+    box.append(kp);
+    // ファネル
+    const fn=el("div",{class:"funnel"});
+    STAGES.forEach((l,i)=>fn.append(el("div",{class:"fn-row"},el("span",{class:"fn-l"},l),el("div",{class:"fn-t"},el("div",{class:"fn-b",style:"width:"+(cnt[0]?Math.max(3,cnt[i]/cnt[0]*100):0)+"%"},el("b",{},cnt[i]))),el("span",{class:"fn-r"},i?"前の段階から "+pct(cnt[i],cnt[i-1]):""))));
+    const two=el("div",{class:"two"});
+    two.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"選考の流れ"),el("span",{class:"muted"},"応募→内定 "+pct(cnt[4],cnt[0]))),fn,
+      el("div",{class:"muted"},"終了した人：見送り "+ended.見送り+"・辞退 "+ended.辞退+"・欠席 "+ended.欠席+"。書類通過＝1次面接の日程調整以降に進んだ人。")));
+    // 経路（スカウト／応募／紹介）
+    const route=a=>/紹介/.test(a.media||"")?"人材紹介":/スカウト/.test(a.route||"")?"スカウト":"応募・その他";
+    const rg={};rows.forEach((a,i)=>{const k=route(a);(rg[k]=rg[k]||{n:0,iv:0,of:0});rg[k].n++;if(st[i]>=2)rg[k].iv++;if(st[i]>=4)rg[k].of++;});
+    const rmax=Math.max(1,...Object.values(rg).map(x=>x.n));const rb=el("div",{class:"hbars"});
+    Object.entries(rg).sort((a,b)=>b[1].n-a[1].n).forEach(([k,v])=>rb.append(hbar(k,v.n,rmax,"面接 "+v.iv+"（"+pct(v.iv,v.n)+"）")));
+    two.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"経路別")),Object.keys(rg).length?rb:el("div",{class:"muted"},"この期間の応募はありません")));
+    box.append(two);
+    // 媒体別
+    const mg={};rows.forEach((a,i)=>{const k=a.media||"不明";const o=mg[k]=mg[k]||[0,0,0,0,0];for(let j=0;j<=st[i];j++)o[j]++;});
+    const mt=el("table",{},el("thead",{},el("tr",{},el("th",{},"媒体"),...STAGES.map(x=>el("th",{},x)),el("th",{},"応募→面接"),el("th",{},"面接→内定"))));const mb=el("tbody");
+    const mmax=Math.max(1,...Object.values(mg).map(x=>x[0]));
+    Object.entries(mg).sort((a,b)=>b[1][0]-a[1][0]).forEach(([k,v])=>mb.append(el("tr",{},el("td",{},k),...v.map((n,i)=>el("td",{class:"num"},i===0?el("span",{class:"cellbar"},el("i",{style:"width:"+n/mmax*100+"%"}),String(n)):String(n))),el("td",{class:"num"},pct(v[2],v[0])),el("td",{class:"num"},pct(v[4],v[2])))));
+    if(!rows.length)mb.append(el("tr",{},el("td",{colspan:"8",class:"muted"},"この期間の応募はありません")));
+    mt.append(mb);box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"媒体別")),el("div",{class:"tbl"},mt)));
+    // 週ごとの推移
+    const wk={};const wkey=s=>{const d=new Date(s+"T00:00:00");d.setDate(d.getDate()-((d.getDay()+6)%7));return ymd(d);};
+    rows.forEach((a,i)=>{const k=wkey(a.appliedAt);const o=wk[k]=wk[k]||{n:0,iv:0};o.n++;if(st[i]>=2)o.iv++;});
+    const ks=Object.keys(wk).sort();const wmax=Math.max(1,...ks.map(k=>wk[k].n));
+    const ch=el("div",{class:"bars wk"});ks.forEach(k=>ch.append(el("div",{class:"bar"},el("span",{class:"v"},wk[k].n),el("div",{class:"stack",style:"height:"+Math.round(wk[k].n/wmax*100)+"%"},el("div",{class:"b2",style:"height:"+(wk[k].n?wk[k].iv/wk[k].n*100:0)+"%"})),el("span",{class:"k"},md(k)+"〜"))));
+    if(!ks.length)ch.append(el("div",{class:"muted"},"この期間の応募はありません"));
+    box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"週ごとの応募数"),el("span",{class:"legend"},el("i",{class:"lg1"}),"応募 ",el("i",{class:"lg2"}),"うち1次面接まで進んだ人")),ch));
+    // 職種別（すべての職種のとき）
+    if(!state.selJob||state.selJob==="すべての職種"){const jg={};rows.forEach((a,i)=>{const k=a.job||"未設定";const o=jg[k]=jg[k]||{n:0,iv:0,of:0};o.n++;if(st[i]>=2)o.iv++;if(st[i]>=4)o.of++;});
+      const jm=Math.max(1,...Object.values(jg).map(x=>x.n));const jb=el("div",{class:"hbars"});Object.entries(jg).sort((a,b)=>b[1].n-a[1].n).forEach(([k,v])=>jb.append(hbar(k,v.n,jm,"面接 "+v.iv+"・内定 "+v.of)));
+      box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"職種別")),jb));}
+    // シートの集計表
+    const k=JOBKEY[state.selJob];const s=k?state.stats[k]:null;
+    if(s){const det=el("details",{class:"card"},el("summary",{},el("h2",{style:"display:inline"},"シートの集計表（"+(s.tab||"")+"）"),el("span",{class:"muted"}," "+(s.updatedAt?when(s.updatedAt)+" 時点":""))));
+      (s.tables||[]).forEach(t=>{const w=Math.max(...t.rows.map(r=>r.length));const tb=el("table",{class:"stbl"});const b=el("tbody");
+        t.rows.forEach((r,i)=>{const tr=el("tr");for(let c=0;c<w;c++){const v=r[c]||"";tr.append(el(i===0||c===0?"th":"td",{class:c>0&&i>0?"num":null},v));}b.append(tr);});
+        tb.append(b);det.append(el("h3",{},t.title||"（無題）"),el("div",{class:"tbl"},tb));});
+      box.append(det);}
+    return box;
+  }
+  function jobChips(rows){if(state.selJob&&state.selJob!=="すべての職種")return null;const jobs=["すべて",...new Set(rows.map(a=>a.job).filter(Boolean))];const f=el("div",{class:"filters"});jobs.forEach(j=>f.append(el("button",{class:"chip","aria-pressed":String(state.job===j),onclick:()=>{state.job=j;render();}},j)));return f;}
+  const byJob=a=>state.job==="すべて"||a.job===state.job;
+  const asc=k=>(x,y)=>String(x[k]||"").localeCompare(String(y[k]||""));
+  function title(t,sub){return el("div",{class:"sec-title"},el("h1",{},t),sub?el("span",{class:"muted"},sub):null);}
+
+  function vHome(){
+    const w=el("div",{class:"grid-home"});const left=el("div",{class:"col"});
+    const td=today();const in7=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+    const upcoming=state.apps.filter(a=>a.status==="日程確定"&&a.interviewAt&&String(a.interviewAt).slice(0,10)>=td).sort(asc("interviewAt"));
+    const k=[
+      {n:todays().length,l:"今日の面接",c:"green",i:"mic",go:"sched"},
+      {n:tasks().length,l:"残りタスク",c:"orange",i:"task",go:"tasks"},
+      {n:replies().length,l:"返信待ち",c:"red",i:"reply",go:"replies"},
+      {n:upcoming.filter(a=>String(a.interviewAt).slice(0,10)<=in7).length,l:"7日以内の面談",c:"blue",i:"cal",go:"sched"}];
+    const kp=el("div",{class:"kpis"});k.forEach(x=>kp.append(el("button",{class:"kpi",onclick:()=>go(x.go)},el("div",{class:"ic "+x.c,html:svg(x.i)}),el("div",{},el("div",{class:"n"},x.n),el("div",{class:"l"},x.l)))));
+    left.append(kp);
+    if(todays().length)left.append(todaySection());
+    const todo=el("div",{class:"todo"});
+    [["書類選考待ち",state.apps.filter(a=>a.status==="未選考").length,"tasks"],["面接後の判断",state.apps.filter(isAfter).length,"tasks"],["送信の確認",state.apps.filter(a=>a.status==="送信確認待ち").length,"sched"],["返信待ち",replies().length,"replies"],["依頼の要確認",state.reqs.filter(r=>r.status==="要確認").length,"requests"]]
+      .forEach(([l,n,g])=>todo.append(el("button",{onclick:()=>go(g)},n?el("span",{class:"dot"}):null,el("span",{class:"tn"},n),l)));
+    left.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"やること")),todo));
+    const two=el("div",{class:"two"});
+    const tb=el("table",{},el("thead",{},el("tr",{},el("th",{},"日時"),el("th",{},"名前"),el("th",{},"面接"),el("th",{},"媒体"))));const body=el("tbody");
+    upcoming.slice(0,8).forEach(a=>body.append(el("tr",{},el("td",{class:"num"},when(a.interviewAt)),el("td",{},el("button",{class:"linkname",onclick:()=>openDetail(a)},a.name)),el("td",{},roundOf(a)+(a.interviewMode?"・"+a.interviewMode:"")),el("td",{},a.media||""))));
+    if(!upcoming.length)body.append(el("tr",{},el("td",{colspan:"4",class:"muted"},"予定されている面談はありません")));
+    tb.append(body);
+    two.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"面談予定"),el("button",{class:"more",onclick:()=>go("sched")},"すべて見る")),el("div",{class:"tbl"},tb)));
+    const month=td.slice(0,7);const cnt={};state.apps.filter(a=>String(a.appliedAt||"").startsWith(month)).forEach(a=>{cnt[a.media]=(cnt[a.media]||0)+1;});
+    const arr=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,6);const mx=Math.max(1,...arr.map(x=>x[1]));
+    const bars=el("div",{class:"bars"});arr.forEach(([m,n])=>bars.append(el("div",{class:"bar"},el("span",{class:"v"},n),el("div",{class:"b",style:"height:"+Math.round(n/mx*100)+"%"}),el("span",{class:"k",title:m},m))));
+    if(!arr.length)bars.append(el("div",{class:"muted"},"今月の応募はまだありません"));
+    two.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"今月の媒体別応募"),el("span",{class:"muted"},"ボードに入っている人")),bars));
+    left.append(two);
+    const t2=tasks().filter(matchQ).sort(asc("appliedAt")).slice(0,4);
+    left.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"書類選考待ち（古い順）"),el("button",{class:"more",onclick:()=>go("tasks")},"すべて見る")),list(t2,"書類選考待ちの人はいません")));
+    w.append(left);
+    const ev=[];
+    state.apps.forEach(a=>{if(a.createdAt&&a.source!=="初回取り込み")ev.push({t:a.createdAt,c:"",x:a.name+" さんが応募（"+a.media+"）"});
+      if(a.decidedAt&&a.status!=="未選考")ev.push({t:a.decidedAt,c:ENDED.includes(a.status)&&a.status!=="内定"?"r":a.status==="内定"?"g":"",x:a.name+" さん："+pillText(a)});
+      if(a.bookedAt)ev.push({t:a.bookedAt,c:"g",x:a.name+" さんが面談を予約（"+when(a.interviewAt)+"）"});
+      if(a.reply&&a.reply.at)ev.push({t:a.reply.at,c:"o",x:a.name+" さんから返信"});});
+    state.reqs.forEach(r=>{ev.push({t:r.createdAt,c:"",x:"依頼：「"+(r.type||"")+"」"+(r.media?" "+r.media:"")});if(r.doneAt)ev.push({t:r.doneAt,c:r.status==="要確認"?"r":"g",x:"依頼「"+(r.type||"")+"」が"+r.status});});
+    ev.sort((a,b)=>String(b.t).localeCompare(String(a.t)));
+    const tl=el("div",{class:"tl"});let last="";ev.slice(0,40).forEach(e=>{const dd=String(e.t).slice(0,10);if(dd!==last){tl.append(el("span",{class:"day"},md(dd)));last=dd;}const dt=new Date(e.t);tl.append(el("div",{class:"it "+e.c},el("div",{},el("div",{class:"t"},isNaN(dt)?"":z(dt.getHours())+":"+z(dt.getMinutes())),el("div",{class:"x"},e.x))));});
+    if(!ev.length)tl.append(el("div",{class:"muted"},"まだ動きはありません。"));
+    w.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"最近の動き")),tl));
+    return w;
+  }
+  function vTasks(){
+    const rows=tasks().filter(byJob).filter(matchQ);
+    const box=el("div",{class:"col"},title("残りタスク","人の判断が必要なものだけ。判断するまでここに残ります。"),jobChips(tasks()));
+    const G=[["send","送信の確認","入力済みのメッセージを確認して送信してください"],["doc","書類選考","1次面接（カジュアル面談）に進めるか、見送りか"],["after","面接後の判断","次の面接（2次・3次…）に進めるか、内定か、見送りか"],["check","要確認","自動処理で止まったもの"]];
+    G.forEach(([k,h,sub])=>{const rs=rows.filter(a=>(taskKind(a)||{}).k===k).sort(asc(k==="after"?"interviewAt":"appliedAt"));if(!rs.length&&k!=="doc"&&k!=="after")return;
+      box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},h+"（"+rs.length+"）"),el("span",{class:"muted"},sub)),list(rs,"ありません",{compact:k!=="doc"})));});
+    return box;}
+  function vReplies(){const rows=replies().filter(matchQ).sort((a,b)=>String(a.reply.at).localeCompare(String(b.reply.at)));return el("div",{class:"col"},title("返信待ち","媒体で相手から連絡が来ていて、こちらがまだ返していない人。"),list(rows,"返信待ちの人はいません"));}
+  function vSched(){
+    const conf=state.apps.filter(a=>a.status==="送信確認待ち").filter(matchQ);
+    const adj=state.apps.filter(a=>["通過","日程調整中"].includes(a.status)).filter(byJob).filter(matchQ).sort(asc("decidedAt"));
+    const fixed=state.apps.filter(a=>a.status==="日程確定"&&String(a.interviewAt||"").slice(0,10)>today()).filter(byJob).filter(matchQ).sort(asc("interviewAt"));
+    const after=state.apps.filter(isAfter).filter(byJob).filter(matchQ).sort(asc("interviewAt"));
+    const tb=el("table",{},el("thead",{},el("tr",{},el("th",{},"面談日時"),el("th",{},"名前"),el("th",{},"面接"),el("th",{},"面接者"),el("th",{},"媒体"))));const b=el("tbody");
+    fixed.forEach(a=>b.append(el("tr",{},el("td",{class:"num"},when(a.interviewAt)),el("td",{},el("button",{class:"linkname",onclick:()=>openDetail(a)},a.name)),el("td",{},roundOf(a)+(a.interviewMode?"・"+a.interviewMode:"")),el("td",{},a.interviewer||""),el("td",{},(a.media||"")+(a.route?"・"+a.route:"")))));
+    if(!fixed.length)b.append(el("tr",{},el("td",{colspan:"5",class:"muted"},"明日以降の面談はありません")));tb.append(b);
+    return el("div",{class:"col"},title("日程・面談","1次はTimeRex、2次以降の対面は面接者のサイボウズの空きで調整します。"),jobChips(state.apps),
+      todaySection(),
+      conf.length?el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"送信の確認（最初の数件）")),list(conf,"")):null,
+      el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"これからの面談")),el("div",{class:"tbl"},tb)),
+      el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"日程調整中")),list(adj,"日程調整中の人はいません",{compact:true})),
+      el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"面接後の判断待ち"),el("span",{class:"muted"},"次の面接・内定・見送りを選んでください")),list(after,"判断待ちの人はいません",{compact:true})));
+  }
+  function vRequests(){
+    const f=el("form",{class:"req",onsubmit:async e=>{e.preventDefault();const fd=new FormData(f);const r={type:fd.get("type"),media:fd.get("media"),job:fd.get("job"),count:fd.get("count")?Number(fd.get("count")):null,detail:fd.get("detail")||""};if(!r.detail&&r.type==="その他"){banner("内容を書いてください。",true);return;}await newRequest(r);f.reset();}},
+      el("label",{for:"rq-type"},"依頼の種類",el("select",{id:"rq-type",name:"type"},...["スカウト候補のリストアップ","スカウト送付","応募者への返信","見送りの連絡","その他"].map(x=>el("option",{},x)))),
+      el("label",{for:"rq-media"},"媒体",el("select",{id:"rq-media",name:"media"},...["Green","AMBI","ミドルの転職","YOUTRUST","リクナビHRTech","doda","すべて"].map(x=>el("option",{},x)))),
+      el("label",{for:"rq-job"},"職種",el("select",{id:"rq-job",name:"job"},...["広告運用","AIディレクター","AIサポート","デザイナー","MEO運用","コーダー"].map(x=>el("option",{},x)))),
+      el("label",{for:"rq-count"},"件数",el("input",{id:"rq-count",name:"count",type:"number",min:"1",max:"500",placeholder:"例 30"})),
+      el("label",{for:"rq-detail",class:"wide"},"内容・条件",el("textarea",{id:"rq-detail",name:"detail",placeholder:"例：広告代理店でGoogle/Meta広告の運用経験2年以上、年収600万円以下の人を30人リストアップ"})),
+      el("div",{class:"wide",style:"display:flex;gap:8px;align-items:center;flex-wrap:wrap"},el("button",{class:"btn pri",type:"submit"},"依頼する"),el("span",{class:"muted"},"次の自動処理で実行し、結果をこの下に返します。ビズリーチは規約によりAIでの操作ができないため対象外です。")));
+    const tb=el("table",{},el("thead",{},el("tr",{},el("th",{},"依頼日"),el("th",{},"種類"),el("th",{},"媒体・職種"),el("th",{},"内容"),el("th",{},"状態"),el("th",{},"結果"))));const b=el("tbody");
+    const color={"依頼中":"orange","実行中":"blue","完了":"green","要確認":"red","取り消し":"grey"};
+    [...state.reqs].sort((x,y)=>String(y.createdAt).localeCompare(String(x.createdAt))).forEach(r=>{
+      const ops=el("td",{});ops.append(el("div",{style:"white-space:pre-wrap"},r.result||""));
+      if(r.status==="依頼中")ops.append(el("button",{class:"btn",style:"margin-top:4px",onclick:async()=>{await upd("requests/"+r.id,{status:"取り消し"});render();}},"取り消す"));
+      b.append(el("tr",{},el("td",{class:"num"},md(r.createdAt)),el("td",{},r.type||""),el("td",{},[r.media,r.job,r.count?r.count+"件":null].filter(Boolean).join(" ／ ")),el("td",{style:"white-space:pre-wrap;min-width:180px"},(r.target?r.target+"：":"")+(r.detail||"")),el("td",{},el("span",{class:"st "+(color[r.status]||"grey")},r.status||"")),ops));});
+    if(!state.reqs.length)b.append(el("tr",{},el("td",{colspan:"6",class:"muted"},"まだ依頼はありません")));tb.append(b);
+    return el("div",{class:"col"},title("依頼・指示","リストアップ・スカウト送付・返信などをここから頼めます。"),el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"新しい依頼")),f),el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"依頼の履歴")),el("div",{class:"tbl"},tb)));
+  }
+  function vScout(){
+    const s=state.scouts;const tb=el("table",{},el("thead",{},el("tr",{},el("th",{},"媒体"),el("th",{},"職種"),el("th",{},"今月の送付数"),el("th",{},"スカウトからの応募"),el("th",{},"リスト残り"))));const b=el("tbody");
+    const rows=s&&Array.isArray(s.rows)?s.rows:[];
+    rows.forEach(r=>b.append(el("tr",{},el("td",{},r.media),el("td",{},r.job||""),el("td",{class:"num"},r.sent??"–"),el("td",{class:"num"},r.applied??"–"),el("td",{class:"num"},r.listRemaining??"–"))));
+    if(!rows.length)b.append(el("tr",{},el("td",{colspan:"5",class:"muted"},"スカウトの集計は次の自動処理で入ります")));tb.append(b);
+    return el("div",{class:"col"},title("スカウト",s&&s.updatedAt?"集計 "+when(s.updatedAt):""),
+      el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"今月のスカウト状況"),el("button",{class:"more",onclick:()=>go("requests")},"リストアップ・送付を依頼する")),el("div",{class:"tbl"},tb)));
+  }
+  function vAll(){
+    const groups={"進行中":a=>!ENDED.includes(a.status),"終了（見送り・辞退・欠席・内定）":a=>ENDED.includes(a.status),"すべて":()=>true};
+    if(!groups[state.stFilter])state.stFilter="進行中";
+    const f=el("div",{class:"filters"});Object.keys(groups).forEach(g=>f.append(el("button",{class:"chip","aria-pressed":String(state.stFilter===g),onclick:()=>{state.stFilter=g;render();}},g)));
+    const rows=state.apps.filter(groups[state.stFilter]).filter(byJob).filter(matchQ).sort((x,y)=>String(y.appliedAt||"").localeCompare(String(x.appliedAt||"")));
+    const F=(a,k)=>(a.fields||{})[k]||"";
+    const tb=el("table",{},el("thead",{},el("tr",{},...["応募日","名前","媒体・経路","状態","進捗（シート）","年齢","前職","1次選考日","1次選考","2次選考日","2次選考","備考"].map(h=>el("th",{},h)))));const b=el("tbody");
+    rows.forEach(a=>b.append(el("tr",{},el("td",{class:"num"},md(a.appliedAt)),el("td",{},el("button",{class:"linkname",onclick:()=>openDetail(a)},a.name)),el("td",{},(a.media||"")+(a.route?"・"+a.route:"")),
+      el("td",{},el("span",{class:"st "+(STATUS_COLOR[a.status]||"grey")},pillText(a))),el("td",{},a.sheetStatus||""),el("td",{class:"num"},a.age||""),el("td",{},a.company||""),
+      el("td",{class:"num"},F(a,"1次選考日")),el("td",{},F(a,"1次選考")),el("td",{class:"num"},F(a,"2次選考日")),el("td",{},F(a,"2次選考")),el("td",{style:"max-width:220px;white-space:normal"},F(a,"備考")))));
+    if(!rows.length)b.append(el("tr",{},el("td",{colspan:"12",class:"muted"},state.loaded?"該当する応募者はいません":"読み込み中…")));tb.append(b);
+    return el("div",{class:"col"},title("応募者一覧",rows.length+"人"),el("div",{style:"display:flex;flex-wrap:wrap;gap:12px"},f,jobChips(state.apps)),el("section",{class:"card"},el("div",{class:"tbl"},tb)));
+  }
+  function vSettings(){
+    const box=el("div",{class:"col"},title("設定","ログインできる人と、日程調整の設定。管理者だけが変更できます。"));
+    if(!state.me||!state.me.admin){box.append(el("div",{class:"empty"},"管理者だけが見られます。"));return box;}
+    const ub=el("tbody");
+    const draw=()=>{ub.textContent="";(state.users||[]).forEach(u=>ub.append(el("tr",{},el("td",{},u.email),el("td",{},u.name),el("td",{},u.role),el("td",{},el("span",{class:"st "+(u.active?"green":"grey")},u.active?"有効":"無効")),el("td",{class:"num"},u.last?when(u.last):"—"),
+      el("td",{},u.email===state.me.email?el("span",{class:"muted"},"自分"):el("button",{class:"btn",onclick:async()=>{try{state.users=await api("saveUser",{email:u.email,active:!u.active});draw();}catch(e){banner(e.message,true);}}},u.active?"無効にする":"有効に戻す")))));};
+    if(!state.users){api("users").then(u=>{state.users=u;draw();}).catch(e=>banner(e.message,true));}else draw();
+    const f=el("form",{class:"req",onsubmit:async e=>{e.preventDefault();const fd=new FormData(f);try{state.users=await api("saveUser",{email:fd.get("email"),name:fd.get("name"),role:fd.get("role")});f.reset();draw();banner("追加しました。そのメールアドレスでログインできます。");}catch(err){banner(err.message,true);}}},
+      el("label",{},"メールアドレス",el("input",{name:"email",type:"email",required:true,placeholder:"name@exkey.jp"})),
+      el("label",{},"表示名",el("input",{name:"name",placeholder:"例 内田"})),
+      el("label",{},"権限",el("select",{name:"role"},el("option",{},"利用者"),el("option",{},"管理者"))),
+      el("div",{style:"display:flex;align-items:flex-end"},el("button",{class:"btn pri",type:"submit"},"ログインできるようにする")));
+    box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"ログインできる人")),el("div",{class:"tbl"},el("table",{},el("thead",{},el("tr",{},...["メール","表示名","権限","状態","最終ログイン",""].map(h=>el("th",{},h)))),ub)),f,
+      el("span",{class:"muted"},"ここにないメールアドレスではログインできません（確認コードも送られません）。無効にすると、その人はすぐにログアウトされます。")));
+    const s=state.settings||{};
+    const sf=el("form",{class:"req",onsubmit:async e=>{e.preventDefault();const fd=new FormData(sf);await upd("meta/settings",{timerexUrl:fd.get("t1"),timerexUrlOnline:fd.get("t2"),autoSend:fd.get("auto")==="1"});banner("保存しました。");render();}},
+      el("label",{class:"wide"},"1次（カジュアル面談）のTimeRex URL",el("input",{name:"t1",value:s.timerexUrl||""})),
+      el("label",{class:"wide"},"2次以降・オンライン面接のTimeRex URL（空ならサイボウズの空きから候補日を出します）",el("input",{name:"t2",value:s.timerexUrlOnline||""})),
+      el("label",{},"日程調整の送信",el("select",{name:"auto"},el("option",{value:"0",selected:s.autoSend?null:true},"最初の"+(s.confirmQuota||3)+"件は確認"),el("option",{value:"1",selected:s.autoSend?true:null},"自動で送る"))),
+      el("div",{style:"display:flex;align-items:flex-end"},el("button",{class:"btn pri",type:"submit"},"保存")));
+    box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"日程調整")),sf));
+    return box;
+  }
+  function go(v){if(!state.selJob&&v!=="settings"){render();return;}state.view=v;state.job="すべて";state.nexting=null;state.confirming=null;try{localStorage.setItem(NS+"view",v)}catch(e){}render();window.scrollTo(0,0);}
+  function render(){
+    if(!state.me)return;
+    const nav=$("#nav");nav.textContent="";
+    VIEWS.filter(v=>!v.admin||state.me.admin).forEach(v=>{const n=v.badge?v.badge():0;nav.append(el("button",{"aria-current":state.view===v.id?"page":null,onclick:()=>go(v.id),html:svg(v.icon)+'<span class="lbl"></span>'+(n?'<span class="badge">'+n+'</span>':"")}));nav.lastChild.querySelector(".lbl").textContent=v.label;});
+    const s=state.settings;$("#mode").textContent="日程調整の送信："+(!s?"–":(s.autoSend?"自動":"最初の"+(s.confirmQuota||3)+"件は確認（残り"+Math.max(0,(s.confirmQuota||3)-(s.confirmedCount||0))+"件）"));
+    $("#foot").textContent="";$("#foot").append("自動処理：毎日 8〜20時の毎時",el("br"),s&&s.lastSync?"最終取り込み "+when(s.lastSync):"まだ取り込みがありません");
+    $("#who").textContent=state.me.name+(state.me.admin?"（管理者）":"");
+    const d=new Date();$("#date").textContent=d.getFullYear()+"/"+z(d.getMonth()+1)+"/"+z(d.getDate())+" "+"日月火水木金土"[d.getDay()]+"曜日";
+    const cj=$("#curjob");cj.textContent="";cj.hidden=!state.selJob;
+    if(state.selJob)cj.append(el("span",{class:"muted"},"表示中の職種"),el("span",{class:"cj"},state.selJob),el("button",{onclick:()=>pickJob(null)},"職種を切り替える"));
+    const map={home:vHome,tasks:vTasks,replies:vReplies,sched:vSched,interviews:vInterviews,requests:vRequests,scout:vScout,stats:vStats,all:vAll,settings:vSettings};
+    const v=$("#view");v.textContent="";v.append(state.view==="settings"?vSettings():state.selJob?(map[state.view]||vHome)():vPicker());
+    if(state.detail)renderDetail();else if(state.ivOpen)renderIv();
+  }
+  $("#q").addEventListener("input",e=>{state.q=e.target.value;if(state.view==="home"&&state.q)state.view="all";render();});
+  $("#logout").addEventListener("click",()=>logout(false));
+
+  // ---------------------------------------------------------------- ログイン
+  function showLogin(msg){
+    $("#app").hidden=true;const lg=$("#login");lg.hidden=false;lg.textContent="";
+    let email="";try{email=localStorage.getItem(NS+"email")||"";}catch(e){}
+    const m=el("p",{class:"lg-msg"},msg||"");
+    const step1=el("form",{onsubmit:async e=>{e.preventDefault();email=String(new FormData(step1).get("email")||"").trim();if(!email)return;b1.disabled=true;m.textContent="送信しています…";
+      const j=await post({action:"requestCode",email});b1.disabled=false;
+      if(!j.ok){m.textContent=j.error;return;}try{localStorage.setItem(NS+"email",email);}catch(e){}
+      m.textContent=email+" に確認コードを送りました（登録されているアドレスの場合）。メールの6桁を入力してください。";step1.hidden=true;step2.hidden=false;step2.querySelector("input").focus();}},
+      el("label",{},"メールアドレス",el("input",{name:"email",type:"email",value:email,required:true,autocomplete:"email"})));
+    const b1=el("button",{class:"btn pri",type:"submit"},"確認コードを送る");step1.append(b1);
+    const step2=el("form",{hidden:true,onsubmit:async e=>{e.preventDefault();const code=String(new FormData(step2).get("code")||"");b2.disabled=true;m.textContent="確認しています…";
+      const j=await post({action:"verify",email,code});b2.disabled=false;
+      if(!j.ok){m.textContent=j.error;return;}token=j.token;try{localStorage.setItem(NS+"token",token);}catch(e){}start();}},
+      el("label",{},"確認コード（6桁）",el("input",{name:"code",inputmode:"numeric",autocomplete:"one-time-code",maxlength:"8",required:true})));
+    const b2=el("button",{class:"btn pri",type:"submit"},"ログイン");step2.append(b2,el("button",{class:"btn",type:"button",onclick:()=>{step2.hidden=true;step1.hidden=false;m.textContent="";}},"メールアドレスを変える"));
+    lg.append(el("div",{class:"lg-box"},el("div",{class:"brand lg-brand"},el("div",{class:"mark"},"Ex"),el("span",{},"ExKey 採用ボード")),el("p",{class:"muted"},"許可されたメールアドレスだけがログインできます。アクセスが必要な場合は管理者に依頼してください。"),step1,step2,m));
+  }
+  let poll=null;
+  async function start(){
+    $("#login").hidden=true;$("#app").hidden=false;banner("読み込んでいます…");
+    try{ingest(await api("load"));banner("");render();}
+    catch(e){if(token){banner("読み込みに失敗しました："+e.message,true);}return;}
+    clearInterval(poll);poll=setInterval(()=>{if(document.visibilityState==="visible"&&!document.querySelector(".overlay")&&!state.nexting)load(true);},90000);
+  }
+  if(token)start();else showLogin("");
+})();
+
+</script>
+</body>
+</html>
