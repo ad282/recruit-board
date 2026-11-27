@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Cache-Control" content="no-cache">
 <title>ExKey 採用ボード</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Roboto+Mono:wght@500;700&display=swap">
@@ -242,6 +243,26 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
 .today-card .tc-time{display:flex;flex-direction:column;line-height:1.2}
 .today-card .tc-time.past{color:var(--orange)}
 .today-card .tc-time span{font-size:12px;font-weight:500}
+.st-block{display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid var(--line)}
+.st-block h3{font-size:14px;margin:0}
+.prog{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.pg{background:var(--card-2);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.pg-l{font-size:12.5px;color:var(--ink-2)}.pg-l span{display:block;font-size:11px;color:var(--ink-3)}
+.pg-n b{font-family:var(--f-num);font-size:20px}.pg-n span{font-size:12px;color:var(--ink-2)}
+.pg-t{height:6px;background:var(--line);border-radius:3px;overflow:hidden}.pg-b{height:100%;background:var(--accent)}.pg-b.ok{background:var(--green)}
+.pg-s{font-size:11.5px;color:var(--ink-2);font-family:var(--f-num)}
+.stbl2{border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:100%}
+.stbl2 th,.stbl2 td{padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.stbl2 thead th{background:var(--card-2);color:var(--ink-2);font-weight:500;text-align:right;vertical-align:bottom;position:sticky;top:0}
+.stbl2 thead th span{display:block;font-size:10.5px;color:var(--ink-3)}
+.stbl2 thead th:first-child,.stbl2 tbody th{text-align:left;position:sticky;left:0;background:var(--card);z-index:1}
+.stbl2 thead th:first-child{background:var(--card-2)}
+.stbl2 tbody th{font-weight:500}
+.stbl2 td{text-align:right;font-family:var(--f-num)}
+.stbl2 td.pct{color:var(--accent)} .stbl2 td.nil{color:var(--ink-3)}
+.stbl2 tr.tot th,.stbl2 tr.tot td{font-weight:700;background:var(--accent-soft)}
+.stbl2 tbody tr:hover td,.stbl2 tbody tr:hover th{background:var(--card-2)}
+.st-block details summary{cursor:pointer;color:var(--accent);font-size:12.5px}
 
 </style>
 </head>
@@ -269,6 +290,10 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
 (function(){
   "use strict";
   const API_URL="https://script.google.com/macros/s/AKfycbxFms1TAYk5h_hb3O5DTy3hgy-kBexTdlBY4rqWLiATYj-UMtSyP9-p3fQq1dlw4i_P/exec";
+  const BUILD="20261127230945";
+  // 新しい版が公開されたら自動で読み込み直す（GitHub Pages は最大10分ほど古い版を返すことがある）
+  async function checkVersion(){try{const r=await fetch(location.pathname+"?v="+Date.now(),{cache:"no-store"});const t=await r.text();const m=t.match(/const BUILD="(\d+)"/);if(m&&m[1]!==BUILD&&!document.querySelector(".overlay")&&!document.querySelector("form textarea:focus"))location.replace(location.pathname+"?v="+m[1]);}catch(e){}}
+  setTimeout(checkVersion,1500);setInterval(checkVersion,5*60000);
   const NS="rb_"+API_URL.replace(/\/exec$/,"").slice(-12);
   const ICON={
     home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
@@ -598,6 +623,64 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
   if(!state.range)state.range={k:"今月",from:presetRange("今月")[0],to:presetRange("今月")[1]};
   const pct=(a,b)=>b?Math.round(a/b*1000)/10+"%":"–";
   function hbar(label,n,max,sub,cls){return el("div",{class:"hb"},el("span",{class:"hb-l",title:label},label),el("div",{class:"hb-t"},el("div",{class:"hb-b "+(cls||""),style:"width:"+(max?Math.max(2,n/max*100):0)+"%"})),el("span",{class:"hb-n"},n),el("span",{class:"hb-s"},sub||""));}
+  // ---------------------------------------------------------------- シートの集計表を見やすくする
+  const ERR=/^#(DIV\/0!|REF!|VALUE!|N\/A|NAME\?|NUM!)/;
+  const cv=v=>{v=String(v==null?"":v).trim();return ERR.test(v)?"":v;};
+  const num=v=>{v=cv(v).replace(/[¥,%\s]/g,"");if(v===""||isNaN(+v))return null;return +v;};
+  const hdr=h=>{const t=cv(h).split("\n");return {main:t[0],sub:t.slice(1).join(" ").replace(/[()（）]/g,"")};};
+  // 空の見出し列で横に並んだ表を分ける
+  function splitBlocks(rows){
+    const w=Math.max(...rows.map(r=>r.length));const head=rows[0]||[];const empty=c=>!cv(head[c]);
+    const blocks=[];let st=null;
+    for(let c=0;c<=w;c++){if(c<w&&!empty(c)){if(st==null)st=c;}else if(st!=null){blocks.push([st,c]);st=null;}}
+    return blocks.map(([x,y])=>rows.map(r=>r.slice(x,y))).filter(b=>b.length>1);
+  }
+  function progressCards(t){
+    const head=t.rows[0];const row=n=>t.rows.find(r=>cv(r[0])===n);
+    const goal=row("目標"),act=row("実績"),fc=row("着地")||row("見込み");
+    const g=el("div",{class:"prog"});
+    for(let c=1;c<head.length;c++){const h=hdr(head[c]);if(!h.main)continue;
+      const G=goal?num(goal[c]):null,A=act?num(act[c]):null,F=fc?num(fc[c]):null;if(G==null&&A==null)continue;
+      const r=G?Math.round((A||0)/G*100):null;
+      g.append(el("div",{class:"pg"},el("div",{class:"pg-l"},h.main,h.sub?el("span",{},h.sub):null),
+        el("div",{class:"pg-n"},el("b",{},A==null?"–":A.toLocaleString()),G!=null?el("span",{}," / 目標 "+G.toLocaleString()):null),
+        el("div",{class:"pg-t"},el("div",{class:"pg-b"+(r!=null&&r>=100?" ok":""),style:"width:"+Math.min(100,r||0)+"%"})),
+        el("div",{class:"pg-s"},r!=null?"達成率 "+r+"%":"",F!=null&&row("着地")?"　着地見込み "+(+F.toFixed(1)).toLocaleString():"")));}
+    return g;
+  }
+  function cleanTable(rows){
+    const head=rows[0];const body=rows.slice(1).filter(r=>{const label=cv(r[0]);const vals=r.slice(1).map(num).filter(x=>x!=null);
+      if(!label&&vals.length<3)return false;if(/TOTAL|合計/.test(label))return true;return vals.some(x=>x!==0)||r.slice(1).some(x=>cv(x)&&num(x)==null);});
+    if(!body.length)return null;
+    // 全部空の列は出さない
+    const cols=[0];for(let c=1;c<head.length;c++){if(!cv(head[c]))continue;if(body.some(r=>cv(r[c])&&cv(r[c])!=="¥0"))cols.push(c);}
+    const tb=el("table",{class:"stbl2"});
+    tb.append(el("thead",{},el("tr",{},...cols.map(c=>{const h=hdr(head[c]);return el("th",{},h.main||"",h.sub?el("span",{},h.sub):null);}))));
+    const b=el("tbody");
+    body.forEach(r=>{const label=cv(r[0])||"合計";const tot=/TOTAL|合計/.test(label)||!cv(r[0]);
+      b.append(el("tr",{class:tot?"tot":null},...cols.map((c,i)=>{const v=cv(r[c]);if(i===0)return el("th",{},label);
+        const pctCol=/%$/.test(v);return el("td",{class:"num"+(pctCol?" pct":"")+(v===""?" nil":"")},v===""?"–":v);})));});
+    tb.append(b);return el("div",{class:"tbl"},tb);
+  }
+  function monthChart(rows){
+    const head=rows[0];const ms=rows.slice(1).filter(r=>/^\d{1,2}月$/.test(cv(r[0])));if(ms.length<3)return null;
+    const ci=c=>head.findIndex(h=>cv(h).startsWith(c));const a=ci("応募数"),iv=head.findIndex(h=>/一次面接実施$/.test(cv(h)));if(a<0)return null;
+    const mx=Math.max(1,...ms.map(r=>num(r[a])||0));const ch=el("div",{class:"bars wk"});
+    ms.forEach(r=>{const n=num(r[a])||0,m=iv>=0?num(r[iv])||0:0;ch.append(el("div",{class:"bar"},el("span",{class:"v"},n),el("div",{class:"stack",style:"height:"+Math.round(n/mx*100)+"%"},el("div",{class:"b2",style:"height:"+(n?m/n*100:0)+"%"})),el("span",{class:"k"},cv(r[0]))));});
+    return el("div",{},el("span",{class:"legend"},el("i",{class:"lg1"}),"応募数 ",el("i",{class:"lg2"}),"うち1次面接実施"),ch);
+  }
+  function sheetStats(s){
+    const sec=el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"シートの集計（"+String(s.tab||"").replace("⭐️","")+"）"),el("span",{class:"muted"},s.updatedAt?when(s.updatedAt)+" 時点・エラー表示（#DIV/0!など）と0だけの行は省いています":"")));
+    (s.tables||[]).forEach(t=>{if(!t.rows||t.rows.length<2)return;const title=cv(t.title).replace(/\s+/g," ")||"（無題）";
+      const isProg=t.rows.some(r=>cv(r[0])==="目標")&&t.rows.some(r=>cv(r[0])==="実績");
+      const wrap=el("div",{class:"st-block"},el("h3",{},title));
+      if(isProg){const head=t.rows.findIndex(r=>t.rows.indexOf(r)>0&&r.filter(x=>cv(x)).length>3&&!["目標","実績","見込み","着地"].includes(cv(r[0]))&&r.slice(1).some(x=>cv(x)&&num(x)==null));
+        const main=head>0?t.rows.slice(0,head):t.rows;wrap.append(progressCards({rows:main}));
+        if(head>0){const sub=t.rows.slice(head);const mc=monthChart(sub);if(mc)wrap.append(mc);const ct=cleanTable(sub);if(ct)wrap.append(el("details",{},el("summary",{},"月別の表を見る"),ct));}}
+      else splitBlocks(t.rows).forEach(bl=>{const ct=cleanTable(bl);if(ct)wrap.append(ct);});
+      if(wrap.childNodes.length>1)sec.append(wrap);});
+    return sec;
+  }
   function vStats(){
     const R=state.range;const box=el("div",{class:"col"},title("集計・分析","応募日で期間を絞り込みます（2026年10月以降のデータ）"));
     const bar=el("div",{class:"card rangebar"});
@@ -642,13 +725,9 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     if(!state.selJob||state.selJob==="すべての職種"){const jg={};rows.forEach((a,i)=>{const k=a.job||"未設定";const o=jg[k]=jg[k]||{n:0,iv:0,of:0};o.n++;if(st[i]>=2)o.iv++;if(st[i]>=4)o.of++;});
       const jm=Math.max(1,...Object.values(jg).map(x=>x.n));const jb=el("div",{class:"hbars"});Object.entries(jg).sort((a,b)=>b[1].n-a[1].n).forEach(([k,v])=>jb.append(hbar(k,v.n,jm,"面接 "+v.iv+"・内定 "+v.of)));
       box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"職種別")),jb));}
-    // シートの集計表
+    // シートの集計表（見やすく整形）
     const k=JOBKEY[state.selJob];const s=k?state.stats[k]:null;
-    if(s){const det=el("details",{class:"card"},el("summary",{},el("h2",{style:"display:inline"},"シートの集計表（"+(s.tab||"")+"）"),el("span",{class:"muted"}," "+(s.updatedAt?when(s.updatedAt)+" 時点":""))));
-      (s.tables||[]).forEach(t=>{const w=Math.max(...t.rows.map(r=>r.length));const tb=el("table",{class:"stbl"});const b=el("tbody");
-        t.rows.forEach((r,i)=>{const tr=el("tr");for(let c=0;c<w;c++){const v=r[c]||"";tr.append(el(i===0||c===0?"th":"td",{class:c>0&&i>0?"num":null},v));}b.append(tr);});
-        tb.append(b);det.append(el("h3",{},t.title||"（無題）"),el("div",{class:"tbl"},tb));});
-      box.append(det);}
+    if(s)box.append(sheetStats(s));
     return box;
   }
   function jobChips(rows){if(state.selJob&&state.selJob!=="すべての職種")return null;const jobs=["すべて",...new Set(rows.map(a=>a.job).filter(Boolean))];const f=el("div",{class:"filters"});jobs.forEach(j=>f.append(el("button",{class:"chip","aria-pressed":String(state.job===j),onclick:()=>{state.job=j;render();}},j)));return f;}
