@@ -347,7 +347,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     state.all=by("applicants");state.reqs=by("requests");state.ivs=by("interviews");
     const st={};by("stats").forEach(s=>st[s.id]=s);state.stats=st;
     state.jobs=docs["meta/jobs"]||null;state.settings=docs["meta/settings"]||null;state.scouts=docs["meta/scouts"]||null;
-    state.loaded=true;state.loadedAt=d.at;applyJob();
+    state.loaded=true;state.loadedAt=d.at;if(state.selJob&&state.selJob!=="すべての職種"&&!activeJobs().includes(state.selJob))state.selJob=null;applyJob();
   }
   async function load(silent){
     try{const d=await api("load");ingest(d);if(!silent)banner("");render();}
@@ -361,7 +361,8 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
   }
   async function setApp(a,patch){if(state.busy[a.id])return;state.busy[a.id]=true;render();await upd("applicants/"+a.id,patch);delete state.busy[a.id];render();}
   function banner(m,err){const b=$("#banner");b.textContent=m||"";b.className="banner"+(err?" err":"");b.hidden=!m;}
-  function applyJob(){state.apps=state.all.filter(a=>!state.selJob||state.selJob==="すべての職種"||a.job===state.selJob);}
+  const activeJobs=()=>(state.jobs&&state.jobs.active)||["広告運用","AIディレクター","AIサポート"];
+  function applyJob(){state.apps=state.all.filter(a=>state.selJob==="すべての職種"||!state.selJob?activeJobs().includes(a.job):a.job===state.selJob);}
   function pickJob(j){state.selJob=j;try{j?localStorage.setItem(NS+"job",j):localStorage.removeItem(NS+"job")}catch(e){}applyJob();state.view="home";render();window.scrollTo(0,0);}
 
   // ---------------------------------------------------------------- 応募者カード
@@ -551,13 +552,13 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
 
   // ---------------------------------------------------------------- 各画面
   function vPicker(){
-    const order=(state.jobs&&state.jobs.order)||Object.keys(JOBKEY);const active=(state.jobs&&state.jobs.active)||order;
+    const active=(state.jobs&&state.jobs.active)||["広告運用","AIディレクター","AIサポート"];
     const g=el("div",{class:"picker"});const mo=today().slice(0,7);
-    [...order,"すべての職種"].forEach(j=>{const rows=j==="すべての職種"?state.all:state.all.filter(a=>a.job===j);
+    [...active,"すべての職種"].forEach(j=>{const rows=j==="すべての職種"?state.all.filter(a=>active.includes(a.job)):state.all.filter(a=>a.job===j);
       const n=f=>rows.filter(f).length;
-      g.append(el("button",{class:"jobcard"+(active.includes(j)||j==="すべての職種"?"":" idle"),onclick:()=>pickJob(j)},
+      g.append(el("button",{class:"jobcard",onclick:()=>pickJob(j)},
         el("span",{class:"jn"},j),
-        el("span",{class:"muted"},j==="すべての職種"?"全職種をまとめて見る":(active.includes(j)?"募集中":"10月以降の応募なし")),
+        el("span",{class:"muted"},j==="すべての職種"?"募集中の職種をまとめて見る":"募集中"),
         el("div",{class:"js"},el("div",{},el("b",{},n(a=>["未選考","送信確認待ち","要確認"].includes(a.status))),"残りタスク"),el("div",{},el("b",{},n(a=>a.status==="日程確定")),"面談予定"),el("div",{},el("b",{},n(a=>String(a.appliedAt||"").startsWith(mo))),"今月の応募"))));});
     return el("div",{class:"col"},title("どの採用職種を見ますか？","選んだ職種の応募者・面談・集計だけを表示します。あとから左のメニューで切り替えられます。"),g);
   }
