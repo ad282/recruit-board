@@ -273,6 +273,15 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
 .stbl2 tr.subrow th{font-weight:400;color:var(--ink-2);padding-left:22px;font-size:12px}
 .stbl2 tr.subrow td{color:var(--ink-2);font-size:12px}
 .mini{display:flex;align-items:center;gap:6px;min-width:110px}.mini .pg-t{flex:1}.mini span{font-family:var(--f-num);font-size:11.5px;color:var(--ink-2)}
+.flowwrap{overflow-x:auto;padding-bottom:4px}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;row-gap:10px}
+.fl-box{background:var(--accent-soft);border-radius:10px;padding:10px 12px;min-width:96px;display:flex;flex-direction:column;gap:2px}
+.fl-box.last{background:var(--green-soft)}
+.fl-l{font-size:12px;color:var(--ink-2);white-space:nowrap}
+.fl-n{font-family:var(--f-num);font-size:22px;font-weight:700}
+.fl-s{font-size:11px;color:var(--ink-3);white-space:nowrap}
+.fl-arrow{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 6px;color:var(--ink-3);font-size:14px}
+.fl-arrow span{font-family:var(--f-num);font-size:11.5px;color:var(--accent);font-weight:700}
 
 </style>
 </head>
@@ -300,7 +309,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
 (function(){
   "use strict";
   const API_URL="https://script.google.com/macros/s/AKfycbxFms1TAYk5h_hb3O5DTy3hgy-kBexTdlBY4rqWLiATYj-UMtSyP9-p3fQq1dlw4i_P/exec";
-  const BUILD="20261127232101";
+  const BUILD="20261127232324";
   // 新しい版が公開されたら自動で読み込み直す（GitHub Pages は最大10分ほど古い版を返すことがある）
   async function checkVersion(){try{const r=await fetch(location.pathname+"?v="+Date.now(),{cache:"no-store"});const t=await r.text();const m=t.match(/const BUILD="(\d+)"/);if(m&&m[1]!==BUILD&&!document.querySelector(".overlay")&&!document.querySelector("form textarea:focus"))location.replace(location.pathname+"?v="+m[1]);}catch(e){}}
   setTimeout(checkVersion,1500);setInterval(checkVersion,5*60000);
@@ -683,7 +692,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
   function sheetStats(s){
     const sec=el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"シートの実績進捗（"+String(s.tab||"").replace("⭐️","")+"）"),el("span",{class:"muted"},s.updatedAt?when(s.updatedAt)+" 時点・エラー表示（#DIV/0!など）と0だけの行は省いています":"")));
     (s.tables||[]).forEach(t=>{if(!t.rows||t.rows.length<2)return;const title=cv(t.title).replace(/\s+/g," ")||"（無題）";
-      if(/^(媒体実績|計画)/.test(title))return; // 媒体実績は上の「期間を選べる表」で見る
+      if(/^(媒体実績|計画)/.test(title)||/4月末まで/.test(title))return; // 媒体実績は「期間を選べる表」、古い期間の実績進捗は「期間を選べる実績進捗」で見る
       const isProg=t.rows.some(r=>cv(r[0])==="目標")&&t.rows.some(r=>cv(r[0])==="実績");
       const wrap=el("div",{class:"st-block"},el("h3",{},title));
       if(isProg){const head=t.rows.findIndex(r=>t.rows.indexOf(r)>0&&r.filter(x=>cv(x)).length>3&&!["目標","実績","見込み","着地"].includes(cv(r[0]))&&r.slice(1).some(x=>cv(x)&&num(x)==null));
@@ -729,6 +738,30 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     else b.append(line("TOTAL",T,TS,"tot"));
     tb.append(b);
     return el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},ttl),el("span",{class:"muted"},R.from.replace(/-/g,"/")+"〜"+R.to.replace(/-/g,"/")+"・応募日で集計。スカウト送付数は月別スカウト表の実績（月単位・記入がある月だけ）。人材紹介の行を押すと紹介会社ごとに開きます")),bar,el("div",{class:"tbl"},tb));
+  }
+  // ---------------------------------------------------------------- 実績進捗（期間を選べる・目標なし・遷移率）
+  function progressSection(){
+    const id="p1",td=today(),minD=histMin();
+    if(!mediaRanges[id])mediaRanges[id]={k:"全期間",from:minD,to:td};
+    const R=mediaRanges[id];
+    const presets={"今の期間":[CUR_FROM,td],"今月":presetRange("今月"),"先月":presetRange("先月"),"直近90日":presetRange("直近90日"),"全期間":[minD,td]};
+    const bar=el("div",{class:"rangebar inner"});
+    Object.keys(presets).forEach(k=>bar.append(el("button",{class:"chip","aria-pressed":String(R.k===k),onclick:()=>{mediaRanges[id]={k,from:presets[k][0],to:presets[k][1]};render();}},k)));
+    bar.append(el("span",{class:"rg"},el("input",{type:"date",value:R.from,"aria-label":"開始日",onchange:e=>{mediaRanges[id]={k:"",from:e.target.value,to:R.to};render();}}),"〜",el("input",{type:"date",value:R.to,"aria-label":"終了日",onchange:e=>{mediaRanges[id]={k:"",from:R.from,to:e.target.value};render();}})));
+    const rows=histRows().filter(x=>x.d>=R.from&&x.d<=R.to);const c=b=>rows.filter(x=>x.f&b).length;
+    // 段階：後ろの段階に進んだ人は手前の段階も通ったものとして数える（遷移率が100%を超えないように）
+    const L=[["応募数",""],["有効応募","書類NG・重複を除く"],["面談数","1次面接を実施"],["経験者見込み",""],["候補者見込み",""],["2次以降へ","2次面接以降に進んだ"],["候補者",""],["内定",""]];
+    const cond=[()=>true,f=>!(f&1),f=>f&2,f=>f&4,f=>f&8,f=>f&64,f=>f&16,f=>f&32];
+    const lvl=f=>{let m=0;cond.forEach((fn,i)=>{if(fn(f))m=i;});return m;};
+    const lv=rows.map(x=>lvl(x.f));const N=rows.length;
+    const S=L.map(([l,sub],i)=>[l,lv.filter(v=>v>=i).length,sub]);
+    const P=(a,b)=>b?(Math.round(a/b*1000)/10)+"%":"–";
+    const flow=el("div",{class:"flow"});
+    S.forEach(([l,n,sub],i)=>{if(i)flow.append(el("div",{class:"fl-arrow"},el("span",{},P(n,S[i-1][1])),"→"));
+      flow.append(el("div",{class:"fl-box"+(i===S.length-1?" last":"")},el("div",{class:"fl-l"},l),el("div",{class:"fl-n"},n),el("div",{class:"fl-s"},i?"応募から "+P(n,N):sub||" "),sub&&i?el("div",{class:"fl-s"},sub):null));});
+    const ended=c(128);
+    return el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"実績進捗（期間を選んで過去実績を見る）"),el("span",{class:"muted"},R.from.replace(/-/g,"/")+"〜"+R.to.replace(/-/g,"/")+"・応募日で集計。矢印の％は前の段階からの遷移率")),
+      bar,el("div",{class:"flowwrap"},flow),el("div",{class:"muted"},"この期間の辞退・欠席："+ended+"人（応募の"+P(ended,N)+"）。採用数はシートに列がないため出していません。"));
   }
   // ---------------------------------------------------------------- スカウト計画（シートの月別表）
   let spMonth=null;
@@ -798,7 +831,8 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
       box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"職種別")),jb));}
     // 媒体実績（期間を選べる）とスカウト計画
     box.append(mediaSection("m1","媒体実績（今動いている期間）",CUR_FROM),mediaSection("m2","媒体実績（全期間）",""),scoutPlanSection());
-    // シートの集計表（見やすく整形）
+    // 実績進捗：期間を選べる過去実績（目標なし・遷移率）→ シートの実績進捗(10/1~)
+    box.append(progressSection());
     const k=JOBKEY[state.selJob];const s=k?state.stats[k]:null;
     if(s)box.append(sheetStats(s));
     return box;
