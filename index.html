@@ -269,6 +269,10 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
 .stbl2 td.warn{color:var(--red);font-weight:700}
 .stbl2 .soon{margin-left:6px;font-size:11px;color:var(--green);font-family:var(--f-body)}
 .stbl2.left td{text-align:left;font-family:var(--f-body)}.stbl2.left td.num{font-family:var(--f-num)}.stbl2.left thead th{text-align:left}
+.rangebar.inner{display:flex;box-shadow:none;padding:0;background:none}
+.stbl2 tr.subrow th{font-weight:400;color:var(--ink-2);padding-left:22px;font-size:12px}
+.stbl2 tr.subrow td{color:var(--ink-2);font-size:12px}
+.mini{display:flex;align-items:center;gap:6px;min-width:110px}.mini .pg-t{flex:1}.mini span{font-family:var(--f-num);font-size:11.5px;color:var(--ink-2)}
 
 </style>
 </head>
@@ -296,7 +300,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
 (function(){
   "use strict";
   const API_URL="https://script.google.com/macros/s/AKfycbxFms1TAYk5h_hb3O5DTy3hgy-kBexTdlBY4rqWLiATYj-UMtSyP9-p3fQq1dlw4i_P/exec";
-  const BUILD="20261127231336";
+  const BUILD="20261127232101";
   // 新しい版が公開されたら自動で読み込み直す（GitHub Pages は最大10分ほど古い版を返すことがある）
   async function checkVersion(){try{const r=await fetch(location.pathname+"?v="+Date.now(),{cache:"no-store"});const t=await r.text();const m=t.match(/const BUILD="(\d+)"/);if(m&&m[1]!==BUILD&&!document.querySelector(".overlay")&&!document.querySelector("form textarea:focus"))location.replace(location.pathname+"?v="+m[1]);}catch(e){}}
   setTimeout(checkVersion,1500);setInterval(checkVersion,5*60000);
@@ -389,6 +393,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     const by=p=>Object.keys(docs).filter(k=>k.startsWith(p+"/")).map(k=>Object.assign({id:k.slice(p.length+1),_path:k},docs[k]));
     state.all=by("applicants");state.reqs=by("requests");state.ivs=by("interviews");
     const st={};by("stats").forEach(s=>st[s.id]=s);state.stats=st;
+    const hs={};by("hist").forEach(x=>hs[x.id]=x);state.hist=hs;const sp={};by("scoutplan").forEach(x=>sp[x.id]=x);state.scoutplan=sp;
     state.jobs=docs["meta/jobs"]||null;state.settings=docs["meta/settings"]||null;state.scouts=docs["meta/scouts"]||null;
     state.loaded=true;state.loadedAt=d.at;if(state.selJob&&state.selJob!=="すべての職種"&&!activeJobs().includes(state.selJob))state.selJob=null;applyJob();
   }
@@ -676,8 +681,9 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     return el("div",{},el("span",{class:"legend"},el("i",{class:"lg1"}),"応募数 ",el("i",{class:"lg2"}),"うち1次面接実施"),ch);
   }
   function sheetStats(s){
-    const sec=el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"シートの集計（"+String(s.tab||"").replace("⭐️","")+"）"),el("span",{class:"muted"},s.updatedAt?when(s.updatedAt)+" 時点・エラー表示（#DIV/0!など）と0だけの行は省いています":"")));
+    const sec=el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"シートの実績進捗（"+String(s.tab||"").replace("⭐️","")+"）"),el("span",{class:"muted"},s.updatedAt?when(s.updatedAt)+" 時点・エラー表示（#DIV/0!など）と0だけの行は省いています":"")));
     (s.tables||[]).forEach(t=>{if(!t.rows||t.rows.length<2)return;const title=cv(t.title).replace(/\s+/g," ")||"（無題）";
+      if(/^(媒体実績|計画)/.test(title))return; // 媒体実績は上の「期間を選べる表」で見る
       const isProg=t.rows.some(r=>cv(r[0])==="目標")&&t.rows.some(r=>cv(r[0])==="実績");
       const wrap=el("div",{class:"st-block"},el("h3",{},title));
       if(isProg){const head=t.rows.findIndex(r=>t.rows.indexOf(r)>0&&r.filter(x=>cv(x)).length>3&&!["目標","実績","見込み","着地"].includes(cv(r[0]))&&r.slice(1).some(x=>cv(x)&&num(x)==null));
@@ -686,6 +692,65 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
       else splitBlocks(t.rows).forEach(bl=>{const ct=cleanTable(bl);if(ct)wrap.append(ct);});
       if(wrap.childNodes.length>1)sec.append(wrap);});
     return sec;
+  }
+  // ---------------------------------------------------------------- 媒体実績（全期間の応募履歴から。期間を自由に選べる）
+  const CUR_FROM="2026-10-01"; // 今動いている採用期間の開始（シートの「実績進捗(10/1~)」）
+  function histKeys(){const j=state.selJob;if(j&&j!=="すべての職種")return [JOBKEY[j]];return activeJobs().map(x=>JOBKEY[x]);}
+  function histRows(){const out=[];histKeys().forEach(k=>{const h=state.hist&&state.hist[k];if(!h)return;h.rows.forEach(r=>{const d=String(r[0]);out.push({d:d.slice(0,4)+"-"+d.slice(4,6)+"-"+d.slice(6,8),media:h.media[r[1]],route:h.route[r[2]]||"",f:r[3]});});});return out;}
+  function histMin(){const r=histRows();return r.length?r.reduce((m,x)=>x.d<m?x.d:m,"9999"):CUR_FROM;}
+  const normRoute=r=>{r=String(r||"").replace(/株式会社|\s/g,"");if(/geekly|ギークリー/i.test(r))return "ギークリー";if(/パーソル/.test(r))return "パーソルキャリア";if(/ワークポート/.test(r))return "ワークポート";if(/heartfull/i.test(r))return "Heart Full";if(/インディード|リクルート/.test(r))return r.includes("インディード")?"インディードリクルートパートナーズ":"リクルート";return r||"（不明）";};
+  const openSub={};
+  function scoutByMedia(from,to){const fm=from.slice(0,7),tm=to.slice(0,7),out={};histKeys().forEach(k=>{const sp=state.scoutplan&&state.scoutplan[k];if(!sp)return;sp.months.forEach(m=>{if(m.ym<fm||m.ym>tm)return;m.rows.forEach(r=>{if(r[3]!=null)out[r[0]]=(out[r[0]]||0)+r[3];});});});return out;}
+  const mediaRanges={};
+  function mediaSection(id,ttl,defFrom){
+    const td=today();const minD=histMin();
+    if(!mediaRanges[id])mediaRanges[id]={k:defFrom?"今の期間":"全期間",from:defFrom||minD,to:td};
+    const R=mediaRanges[id];
+    const presets={"今の期間":[CUR_FROM,td],"今月":presetRange("今月"),"先月":presetRange("先月"),"直近90日":presetRange("直近90日"),"全期間":[minD,td]};
+    const bar=el("div",{class:"rangebar inner"});
+    Object.keys(presets).forEach(k=>bar.append(el("button",{class:"chip","aria-pressed":String(R.k===k),onclick:()=>{mediaRanges[id]={k,from:presets[k][0],to:presets[k][1]};render();}},k)));
+    bar.append(el("span",{class:"rg"},el("input",{type:"date",value:R.from,"aria-label":"開始日",onchange:e=>{mediaRanges[id]={k:"",from:e.target.value,to:R.to};render();}}),"〜",el("input",{type:"date",value:R.to,"aria-label":"終了日",onchange:e=>{mediaRanges[id]={k:"",from:R.from,to:e.target.value};render();}})));
+    const rows=histRows().filter(x=>x.d>=R.from&&x.d<=R.to);
+    const sc=scoutByMedia(R.from,R.to);
+    const norm=m=>m==="BIZREACH"?"ビズリーチ":m==="DODA"?"doda":m;
+    const g={};const add=(k,x)=>{const o=g[k]=g[k]||{n:0,ng:0,iv:0,ex:0,cm:0,cd:0,of:0,dc:0,sub:{}};o.n++;if(x.f&1)o.ng++;if(x.f&2)o.iv++;if(x.f&4)o.ex++;if(x.f&8)o.cm++;if(x.f&16)o.cd++;if(x.f&32)o.of++;if(x.f&128)o.dc++;return o;};
+    rows.forEach(x=>{const m=norm(x.media);const o=add(m,x);if(m==="人材紹介"&&x.route){const rk=normRoute(x.route);const s2=o.sub[rk]=o.sub[rk]||{n:0,ng:0,iv:0,ex:0,cm:0,cd:0,of:0,dc:0};s2.n++;if(x.f&1)s2.ng++;if(x.f&2)s2.iv++;if(x.f&4)s2.ex++;if(x.f&8)s2.cm++;if(x.f&16)s2.cd++;if(x.f&32)s2.of++;if(x.f&128)s2.dc++;}});
+    Object.keys(sc).forEach(m=>{const k=norm(m);if(!g[k]&&sc[m])g[k]={n:0,ng:0,iv:0,ex:0,cm:0,cd:0,of:0,dc:0,sub:{}};});
+    const P=(a,b)=>b?(Math.round(a/b*1000)/10)+"%":"–";
+    const cols=["媒体","スカウト送付","応募","応募率","書類NG","有効応募","面談","面談率","経験者見込み","候補者見込み","候補者","内定","辞退・欠席"];
+    const tb=el("table",{class:"stbl2"},el("thead",{},el("tr",{},...cols.map((h,i)=>el("th",{},h,i===3?el("span",{},"応募÷送付"):i===7?el("span",{},"面談÷応募"):null)))));const b=el("tbody");
+    const line=(name,o,scout,cls)=>el("tr",{class:cls||null},el("th",{},name),el("td",{class:"num"},scout?scout.toLocaleString():"–"),el("td",{class:"num"},o.n),el("td",{class:"num pct"},scout?P(o.n,scout):"–"),el("td",{class:"num"},o.ng),el("td",{class:"num"},o.n-o.ng),el("td",{class:"num"},o.iv),el("td",{class:"num pct"},P(o.iv,o.n)),el("td",{class:"num"},o.ex),el("td",{class:"num"},o.cm),el("td",{class:"num"},o.cd),el("td",{class:"num"},o.of),el("td",{class:"num"},o.dc));
+    const T={n:0,ng:0,iv:0,ex:0,cm:0,cd:0,of:0,dc:0};let TS=0;
+    Object.entries(g).sort((a,b)=>b[1].n-a[1].n).forEach(([m,o])=>{const scv=Object.keys(sc).filter(k=>norm(k)===m).reduce((a,k)=>a+sc[k],0);TS+=scv;Object.keys(T).forEach(k=>T[k]+=o[k]);
+      const hasSub=Object.keys(o.sub).length>0;const key=id+m;
+      const tr=line(hasSub?(openSub[key]?"▾ ":"▸ ")+m:m,o,scv,hasSub?"hassub":null);if(hasSub){tr.style.cursor="pointer";tr.title="クリックで紹介会社ごとに表示";tr.onclick=()=>{openSub[key]=!openSub[key];render();};}
+      b.append(tr);if(hasSub&&openSub[key])Object.entries(o.sub).sort((a,b)=>b[1].n-a[1].n).forEach(([r,so])=>b.append(line("└ "+r,so,0,"subrow")));});
+    if(!rows.length&&!TS)b.append(el("tr",{},el("td",{colspan:String(cols.length),class:"muted"},"この期間の応募はありません")));
+    else b.append(line("TOTAL",T,TS,"tot"));
+    tb.append(b);
+    return el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},ttl),el("span",{class:"muted"},R.from.replace(/-/g,"/")+"〜"+R.to.replace(/-/g,"/")+"・応募日で集計。スカウト送付数は月別スカウト表の実績（月単位・記入がある月だけ）。人材紹介の行を押すと紹介会社ごとに開きます")),bar,el("div",{class:"tbl"},tb));
+  }
+  // ---------------------------------------------------------------- スカウト計画（シートの月別表）
+  let spMonth=null;
+  function scoutPlanSection(){
+    const keys=histKeys();const months={};
+    keys.forEach(k=>{const sp=state.scoutplan&&state.scoutplan[k];if(!sp)return;sp.months.forEach(m=>{const o=months[m.ym]=months[m.ym]||{};m.rows.forEach(r=>{const x=o[r[0]]=o[r[0]]||[0,0,0,0,0,false];[1,2,3,4,5].forEach(i=>{if(r[i]!=null){x[i-1]+=r[i];}});});});});
+    const yms=Object.keys(months).sort().reverse();
+    const sec=el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"スカウト計画"),el("span",{class:"muted"},"シートの月別スカウト表（計画と実績）")));
+    if(!yms.length){sec.append(el("div",{class:"muted"},"この職種のスカウト計画はシートにありません"));return sec;}
+    const cur=today().slice(0,7);if(!spMonth||!months[spMonth])spMonth=months[cur]?cur:yms[0];
+    const chips=el("div",{class:"filters"});yms.forEach(ym=>chips.append(el("button",{class:"chip","aria-pressed":String(spMonth===ym),onclick:()=>{spMonth=ym;render();}},ym.slice(0,4)+"年"+(+ym.slice(5))+"月"+(ym===cur?"（今月）":""))));
+    const o=months[spMonth];const P=(a,b)=>b?(Math.round(a/b*1000)/10)+"%":"–";
+    const tb=el("table",{class:"stbl2"},el("thead",{},el("tr",{},...["媒体","計画 送付","実績 送付","送付の進み","計画 返信想定","実績 応募","返信率（実績）","計画 面接"].map(h=>el("th",{},h)))));const b=el("tbody");
+    const T=[0,0,0,0,0];
+    Object.entries(o).forEach(([m,x])=>{if(!x.slice(0,5).some(v=>v))return;x.slice(0,5).forEach((v,i)=>T[i]+=v);
+      const r=x[0]?Math.round(x[2]/x[0]*100):null;
+      b.append(el("tr",{},el("th",{},m),el("td",{class:"num"},x[0]?x[0].toLocaleString():"–"),el("td",{class:"num"},x[2]?x[2].toLocaleString():"–"),
+        el("td",{},r==null?"":el("div",{class:"mini"},el("div",{class:"pg-t"},el("div",{class:"pg-b"+(r>=100?" ok":""),style:"width:"+Math.min(100,r)+"%"})),el("span",{},r+"%"))),
+        el("td",{class:"num"},x[1]?(+x[1].toFixed(1)):"–"),el("td",{class:"num"},x[3]?x[3]:"–"),el("td",{class:"num pct"},x[2]?P(x[3],x[2]):"–"),el("td",{class:"num"},x[4]?(+x[4].toFixed(1)):"–")));});
+    const rt=T[0]?Math.round(T[2]/T[0]*100):null;
+    b.append(el("tr",{class:"tot"},el("th",{},"TOTAL"),el("td",{class:"num"},T[0].toLocaleString()),el("td",{class:"num"},T[2].toLocaleString()),el("td",{},rt==null?"":el("div",{class:"mini"},el("div",{class:"pg-t"},el("div",{class:"pg-b"+(rt>=100?" ok":""),style:"width:"+Math.min(100,rt)+"%"})),el("span",{},rt+"%"))),el("td",{class:"num"},T[1]?(+T[1].toFixed(1)):"–"),el("td",{class:"num"},T[3]||"–"),el("td",{class:"num pct"},T[2]?P(T[3],T[2]):"–"),el("td",{class:"num"},T[4]?(+T[4].toFixed(1)):"–")));
+    tb.append(b);sec.append(chips,el("div",{class:"tbl"},tb));return sec;
   }
   function vStats(){
     const R=state.range;const box=el("div",{class:"col"},title("集計・分析","応募日で期間を絞り込みます（2026年10月以降のデータ）"));
@@ -731,6 +796,8 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     if(!state.selJob||state.selJob==="すべての職種"){const jg={};rows.forEach((a,i)=>{const k=a.job||"未設定";const o=jg[k]=jg[k]||{n:0,iv:0,of:0};o.n++;if(st[i]>=2)o.iv++;if(st[i]>=4)o.of++;});
       const jm=Math.max(1,...Object.values(jg).map(x=>x.n));const jb=el("div",{class:"hbars"});Object.entries(jg).sort((a,b)=>b[1].n-a[1].n).forEach(([k,v])=>jb.append(hbar(k,v.n,jm,"面接 "+v.iv+"・内定 "+v.of)));
       box.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"職種別")),jb));}
+    // 媒体実績（期間を選べる）とスカウト計画
+    box.append(mediaSection("m1","媒体実績（今動いている期間）",CUR_FROM),mediaSection("m2","媒体実績（全期間）",""),scoutPlanSection());
     // シートの集計表（見やすく整形）
     const k=JOBKEY[state.selJob];const s=k?state.stats[k]:null;
     if(s)box.append(sheetStats(s));
@@ -862,17 +929,28 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     return el("div",{class:"col"},title("スカウト",s&&s.updatedAt?"集計 "+when(s.updatedAt):""),
       el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"今月のスカウト状況"),el("button",{class:"more",onclick:()=>go("requests")},"リストアップ・送付を依頼する")),el("div",{class:"tbl"},tb)));
   }
+  // 面接実施：何次まで実施したか（シートの「面接実施」列があればそれも見る）
+  function ivDone(a){
+    const f=a.fields||{};const s1=String(f["1次選考"]||"").trim(),s2=String(f["2次選考"]||"").trim(),ss=String(a.sheetStatus||"");
+    if(a.status==="欠席"||/バック|欠席/.test(s1+s2))return el("span",{class:"st red"},"欠席");
+    let n=0;
+    if(s1||["実施済み","選考中","内定"].includes(a.status)&&roundOf(a)==="1次"||/二次|三次|内定|採用見送り\((一|二)次\)/.test(ss)||(f["面接実施"]&&f["面接実施"]!=="FALSE"))n=1;
+    if(s2||/三次|採用見送り\(二次\)/.test(ss)||(/二次面接日程確定/.test(ss)&&a.status==="実施済み"))n=2;
+    const cr=ROUNDS.indexOf(a.currentRound||"");if(a.status==="実施済み"&&cr+1>n)n=cr+1;
+    if(String(f["3次選考"]||"").trim())n=Math.max(n,3);
+    return n?el("span",{class:"st green"},n+"次まで実施"):el("span",{class:"muted"},"—");
+  }
   function vAll(){
     const groups={"進行中":a=>!ENDED.includes(a.status),"終了（見送り・辞退・欠席・内定）":a=>ENDED.includes(a.status),"すべて":()=>true};
     if(!groups[state.stFilter])state.stFilter="進行中";
     const f=el("div",{class:"filters"});Object.keys(groups).forEach(g=>f.append(el("button",{class:"chip","aria-pressed":String(state.stFilter===g),onclick:()=>{state.stFilter=g;render();}},g)));
     const rows=state.apps.filter(groups[state.stFilter]).filter(byJob).filter(matchQ).sort((x,y)=>String(y.appliedAt||"").localeCompare(String(x.appliedAt||"")));
     const F=(a,k)=>(a.fields||{})[k]||"";
-    const tb=el("table",{},el("thead",{},el("tr",{},...["応募日","名前","媒体・経路","状態","進捗（シート）","年齢","前職","1次選考日","1次選考","2次選考日","2次選考","備考"].map(h=>el("th",{},h)))));const b=el("tbody");
+    const tb=el("table",{},el("thead",{},el("tr",{},...["応募日","名前","媒体・経路","状態","進捗（シート）","面接実施","年齢","前職","1次選考日","1次選考","2次選考日","2次選考","備考"].map(h=>el("th",{},h)))));const b=el("tbody");
     rows.forEach(a=>b.append(el("tr",{},el("td",{class:"num"},md(a.appliedAt)),el("td",{},el("button",{class:"linkname",onclick:()=>openDetail(a)},a.name)),el("td",{},(a.media||"")+(a.route?"・"+a.route:"")),
-      el("td",{},el("span",{class:"st "+(STATUS_COLOR[a.status]||"grey")},pillText(a))),el("td",{},a.sheetStatus||""),el("td",{class:"num"},a.age||""),el("td",{},a.company||""),
+      el("td",{},el("span",{class:"st "+(STATUS_COLOR[a.status]||"grey")},pillText(a))),el("td",{},a.sheetStatus||""),el("td",{},ivDone(a)),el("td",{class:"num"},a.age||""),el("td",{},a.company||""),
       el("td",{class:"num"},F(a,"1次選考日")),el("td",{},F(a,"1次選考")),el("td",{class:"num"},F(a,"2次選考日")),el("td",{},F(a,"2次選考")),el("td",{style:"max-width:220px;white-space:normal"},F(a,"備考")))));
-    if(!rows.length)b.append(el("tr",{},el("td",{colspan:"12",class:"muted"},state.loaded?"該当する応募者はいません":"読み込み中…")));tb.append(b);
+    if(!rows.length)b.append(el("tr",{},el("td",{colspan:"13",class:"muted"},state.loaded?"該当する応募者はいません":"読み込み中…")));tb.append(b);
     return el("div",{class:"col"},title("応募者一覧",rows.length+"人"),el("div",{style:"display:flex;flex-wrap:wrap;gap:12px"},f,jobChips(state.apps)),el("section",{class:"card"},el("div",{class:"tbl"},tb)));
   }
   function vSettings(){
