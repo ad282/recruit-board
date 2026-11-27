@@ -290,7 +290,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
 (function(){
   "use strict";
   const API_URL="https://script.google.com/macros/s/AKfycbxFms1TAYk5h_hb3O5DTy3hgy-kBexTdlBY4rqWLiATYj-UMtSyP9-p3fQq1dlw4i_P/exec";
-  const BUILD="20261127230945";
+  const BUILD="20261127231057";
   // 新しい版が公開されたら自動で読み込み直す（GitHub Pages は最大10分ほど古い版を返すことがある）
   async function checkVersion(){try{const r=await fetch(location.pathname+"?v="+Date.now(),{cache:"no-store"});const t=await r.text();const m=t.match(/const BUILD="(\d+)"/);if(m&&m[1]!==BUILD&&!document.querySelector(".overlay")&&!document.querySelector("form textarea:focus"))location.replace(location.pathname+"?v="+m[1]);}catch(e){}}
   setTimeout(checkVersion,1500);setInterval(checkVersion,5*60000);
@@ -763,7 +763,7 @@ details.card h3{font-size:13.5px;margin:10px 0 4px}
     if(!arr.length)bars.append(el("div",{class:"muted"},"今月の応募はまだありません"));
     two.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"今月の媒体別応募"),el("span",{class:"muted"},"ボードに入っている人")),bars));
     left.append(two);
-    const t2=tasks().filter(matchQ).sort(asc("appliedAt")).slice(0,4);
+    const t2=kindRows("doc").filter(matchQ).sort(asc("appliedAt")).slice(0,4);
     left.append(el("section",{class:"card"},el("div",{class:"hd"},el("h2",{},"書類選考待ち（古い順）"),el("button",{class:"more",onclick:()=>go("docs")},"すべて見る")),list(t2,"書類選考待ちの人はいません")));
     w.append(left);
     const ev=[];
